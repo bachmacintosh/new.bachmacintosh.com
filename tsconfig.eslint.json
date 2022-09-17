@@ -1,0 +1,5 @@
+{
+	"extends": "./tsconfig.json",
+	"include": [".eslintrc.cjs", "tailwind.config.js", "next.config.js", "next-env.d.ts", "**/*.ts", "**/*.tsx"],
+	"exclude": ["node_modules"]
+}
