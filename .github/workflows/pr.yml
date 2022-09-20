@@ -8,8 +8,10 @@ jobs:
   run-tests:
     name: Test Pull Request
     runs-on: ubuntu-latest
-    if: "contains(github.event.pull_request.labels.*.name, 'safe to test') || contains(github.event.pull_request.labels.*.name, 'dependencies')"
     steps:
+      - name: Check Safe to Test
+        if: "!contains(github.event.pull_request.labels.*.name, 'safe to test') && !contains(github.event.pull_request.labels.*.name, 'dependencies')"
+        run: exit 1
       - name: Checkout
         uses: actions/checkout@v3
         with:
