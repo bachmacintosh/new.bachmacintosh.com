@@ -5,6 +5,7 @@
 	"timezone": "America/New_York",
 	"labels": ["dependencies"],
 	"rebaseWhen": "behind-base-branch",
+	"platformCommit": true,
 	"packageRules": [
 		{
 			"matchUpdateTypes": ["major"],
