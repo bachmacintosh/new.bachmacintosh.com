@@ -1,8 +1,10 @@
-name: Tests
+name: Test and Release
 on:
   push:
     branches:
       - main
+permissions:
+  contents: write
 jobs:
   run-tests:
     name: Run Tests
@@ -29,3 +31,14 @@ jobs:
         run: "npm run build:ci"
       - name: Export Static HTML
         run: npm run export
+      - name: Get Package Version
+        id: package-version
+        uses: martinbeentjes/npm-get-version-action@main
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          name: ${{ steps.package-version.outputs.current-version}}
+          tag: v${{ steps.package-version.outputs.current-version}}
+          commit: main
+          generateReleaseNotes: true
+          prerelease: true
