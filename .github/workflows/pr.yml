@@ -1,7 +1,7 @@
 name: Tests (PR)
 on:
   pull_request_target:
-    types: [opened, labeled, unlabeled, synchronize]
+    types: [labeled, unlabeled, synchronize]
 permissions:
   actions: none
 jobs:
@@ -11,7 +11,10 @@ jobs:
     steps:
       - name: Check Safe to Test
         if: "!contains(github.event.pull_request.labels.*.name, 'safe to test') && !contains(github.event.pull_request.labels.*.name, 'dependencies')"
-        run: exit 1
+        uses: actions/github-script@v6
+        with:
+          script: |
+            core.setFailed('This Pull Request has not been labeled as Safe to Test yet.')
       - name: Checkout
         uses: actions/checkout@v3
         with:
