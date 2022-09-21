@@ -1,6 +1,6 @@
 {
 	"name": "www2",
-	"version": "0.0.6",
+	"version": "0.0.7",
 	"private": true,
 	"scripts": {
 		"dev": "next dev",
@@ -18,7 +18,7 @@
 		"@types/react-dom": "18.0.6",
 		"@typescript-eslint/eslint-plugin": "5.38.0",
 		"@typescript-eslint/parser": "5.38.0",
-		"autoprefixer": "10.4.11",
+		"autoprefixer": "10.4.12",
 		"daisyui": "2.29.0",
 		"eslint": "8.23.1",
 		"eslint-config-next": "12.3.1",
