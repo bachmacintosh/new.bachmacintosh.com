@@ -4,6 +4,7 @@
 	"schedule": ["after 5am and before 11am"],
 	"timezone": "America/New_York",
 	"labels": ["dependencies"],
+	"assignees": ["bachmacintosh"],
 	"rebaseWhen": "behind-base-branch",
 	"platformCommit": true,
 	"packageRules": [
