@@ -9,7 +9,7 @@ export default function Footer(): JSX.Element {
 				className="text-xs text-primary-content"
 			>
 				Copyright &copy;
-				{new Date().getFullYear() > startYear ? `2022-${new Date().getFullYear()}` : new Date().getFullYear()} Collin
+				{new Date().getFullYear() > startYear ? `2023-${new Date().getFullYear()}` : new Date().getFullYear()} Collin
 				Bachman, a.k.a BachMacintosh
 				<br />
 				Version {process.env.version} Commit {process.env.commit?.slice(0, commitShaLength)}
