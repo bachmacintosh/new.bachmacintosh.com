@@ -1,6 +1,6 @@
 {
 	"name": "www2",
-	"version": "0.0.23",
+	"version": "0.0.24",
 	"private": true,
 	"scripts": {
 		"dev": "next dev",
@@ -13,11 +13,11 @@
 	},
 	"dependencies": {
 		"@heroicons/react": "2.0.12",
-		"@types/node": "18.7.18",
-		"@types/react": "18.0.21",
-		"@types/react-dom": "18.0.6",
-		"@typescript-eslint/eslint-plugin": "5.40.1",
-		"@typescript-eslint/parser": "5.40.1",
+		"@types/node": "18.11.5",
+		"@types/react": "18.0.22",
+		"@types/react-dom": "18.0.7",
+		"@typescript-eslint/eslint-plugin": "5.41.0",
+		"@typescript-eslint/parser": "5.41.0",
 		"autoprefixer": "10.4.12",
 		"daisyui": "2.33.0",
 		"eslint": "8.26.0",
