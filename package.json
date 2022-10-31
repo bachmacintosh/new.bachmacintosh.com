@@ -1,6 +1,6 @@
 {
 	"name": "www2",
-	"version": "0.1.4",
+	"version": "0.1.5",
 	"private": true,
 	"scripts": {
 		"dev": "next dev",
@@ -14,7 +14,7 @@
 	"dependencies": {
 		"@bachmacintosh/wanikani-api-types": "0.2.0",
 		"@heroicons/react": "2.0.12",
-		"@types/node": "18.11.7",
+		"@types/node": "18.11.8",
 		"@types/react": "18.0.24",
 		"@types/react-dom": "18.0.8",
 		"@typescript-eslint/eslint-plugin": "5.41.0",
