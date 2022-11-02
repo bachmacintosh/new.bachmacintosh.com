@@ -1,6 +1,6 @@
 {
 	"name": "www2",
-	"version": "0.1.7",
+	"version": "0.1.8",
 	"private": true,
 	"scripts": {
 		"dev": "next dev",
@@ -13,7 +13,7 @@
 	},
 	"dependencies": {
 		"@bachmacintosh/wanikani-api-types": "0.3.0",
-		"@heroicons/react": "2.0.12",
+		"@heroicons/react": "2.0.13",
 		"@types/node": "18.11.9",
 		"@types/react": "18.0.24",
 		"@types/react-dom": "18.0.8",
