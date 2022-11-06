@@ -1,6 +1,6 @@
 {
 	"name": "www2",
-	"version": "0.2.3",
+	"version": "0.2.4",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -13,7 +13,7 @@
 		"lint:fix": "next lint --fix && prettier . --write"
 	},
 	"dependencies": {
-		"@bachmacintosh/wanikani-api-types": "0.4.0",
+		"@bachmacintosh/wanikani-api-types": "0.5.1",
 		"@heroicons/react": "2.0.13",
 		"@types/node": "18.11.9",
 		"@types/react": "18.0.25",
@@ -21,7 +21,7 @@
 		"@typescript-eslint/eslint-plugin": "5.42.0",
 		"@typescript-eslint/parser": "5.42.0",
 		"autoprefixer": "10.4.13",
-		"daisyui": "2.38.0",
+		"daisyui": "2.38.1",
 		"eslint": "8.26.0",
 		"eslint-config-next": "13.0.2",
 		"eslint-config-prettier": "8.5.0",
