@@ -1,6 +1,6 @@
 {
 	"name": "www2",
-	"version": "0.2.5",
+	"version": "0.2.6",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -13,7 +13,7 @@
 		"lint:fix": "next lint --fix && prettier . --write"
 	},
 	"dependencies": {
-		"@bachmacintosh/wanikani-api-types": "0.5.1",
+		"@bachmacintosh/wanikani-api-types": "0.5.2",
 		"@heroicons/react": "2.0.13",
 		"@types/node": "18.11.9",
 		"@types/react": "18.0.25",
