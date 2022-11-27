@@ -101,7 +101,7 @@ module.exports = {
 		// Possible Problems
 
 		"array-callback-return": "error",
-		"no-await-in-loop": "error",
+		"no-await-in-loop": "warn",
 		"no-constant-binary-expression": "error",
 		"no-constructor-return": "error",
 		"no-promise-executor-return": "error",
@@ -143,7 +143,7 @@ module.exports = {
 		"no-bitwise": "warn",
 		"no-caller": "error",
 		"no-confusing-arrow": ["error", { allowParens: false }],
-		"no-console": ["error"],
+		"no-console": ["error", { allow: ["info", "warn", "error"] }],
 		"no-continue": "error",
 		"no-div-regex": "error",
 		"no-eq-null": "error",
@@ -397,7 +397,7 @@ module.exports = {
 				ignoreNumericLiteralTypes: true,
 				ignoreReadonlyClassProperties: true,
 				ignoreTypeIndexes: true,
-				ignore: [0, 1, "0n", "1n"],
+				ignore: [-1, 0, 1, "0n", "1n"],
 			},
 		],
 		"no-redeclare": "off",

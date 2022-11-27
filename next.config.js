@@ -18,6 +18,9 @@ const nextConfig = {
 		commit: process.env.CF_PAGES_COMMIT_SHA ?? "????????",
 		buildTime: new Date().toLocaleString("en-US", dateOptions),
 	},
+	experimental: {
+		appDir: true,
+	},
 };
 
-module.exports = nextConfig;
+export default nextConfig;
