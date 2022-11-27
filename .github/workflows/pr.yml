@@ -8,6 +8,8 @@ jobs:
   run-tests:
     name: Test Pull Request
     runs-on: ubuntu-latest
+    env:
+      WANIKANI_API_TOKEN: ${{ secrets.WANIKANI_API_TOKEN }}
     steps:
       - name: Check Safe to Test
         if: "!contains(github.event.pull_request.labels.*.name, 'safe to test') && !contains(github.event.pull_request.labels.*.name, 'dependencies')"
