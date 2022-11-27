@@ -5,7 +5,7 @@
 		".prettierrc.cjs",
 		"tailwind.config.cjs",
 		"postcss.config.cjs",
-		"next.config.cjs",
+		"next.config.js",
 		"next-env.d.ts",
 		"**/*.ts",
 		"**/*.tsx"
