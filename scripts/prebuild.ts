@@ -45,7 +45,7 @@ import type {
 import fs from "fs";
 import path from "path";
 
-if (typeof process.env.CI === "undefined" && typeof process.env.CF_PAGES === "undefined") {
+if (typeof process.env.GITHUB_ACTIONS === "undefined" && typeof process.env.CF_PAGES === "undefined") {
 	console.info("Loading environment from .env.local...");
 	dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 } else if (typeof process.env.CI === "undefined") {
