@@ -18,13 +18,14 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "18"
-      - name: Cache NPM
+          cache: "npm"
+      - name: Cache WaniKani API
         uses: actions/cache@v3
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          path: ${{ github.workspace }}/.wanikani
+          key: ${{ runner.os }}-wanikani-${{ hashFiles('**/.wanikani') }}
           restore-keys: |
-            ${{ runner.os }}-node-
+            ${{ runner.os }}-wanikani-
       - name: Install Dependencies
         run: npm ci
       - name: Run ESLint
