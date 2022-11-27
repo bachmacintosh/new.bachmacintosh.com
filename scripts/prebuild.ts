@@ -45,13 +45,11 @@ import type {
 import fs from "fs";
 import path from "path";
 
-if (typeof process.env.GITHUB_ACTIONS === "undefined" && typeof process.env.CF_PAGES === "undefined") {
+if (typeof process.env.GITHUB_ACTIONS === "undefined" && typeof process.env.VERCEL === "undefined") {
 	console.info("Loading environment from .env.local...");
 	dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
-} else if (typeof process.env.CI === "undefined") {
-	console.info("Loading environment from Cloudflare Pages...");
 } else {
-	console.info("Loading environment from GitHub Actions...");
+	console.info("Loading environment from CI...");
 }
 console.info("\n");
 
