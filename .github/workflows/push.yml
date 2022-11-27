@@ -23,9 +23,8 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/.wanikani
-          key: ${{ runner.os }}-wanikani-${{ hashFiles('**/.wanikani') }}
-          restore-keys: |
-            ${{ runner.os }}-wanikani-
+          key: wanikani-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: wanikani-${{ runner.os }}-
       - name: Install Dependencies
         run: npm ci
       - name: Run ESLint
