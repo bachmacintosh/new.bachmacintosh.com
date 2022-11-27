@@ -28,9 +28,7 @@ jobs:
       - name: Run ESLint
         run: npm run lint
       - name: Build Next.js App
-        run: "npm run build:ci"
-      - name: Export Static HTML
-        run: npm run export
+        run: "npm run build"
       - name: Get Package Version
         id: package-version
         uses: martinbeentjes/npm-get-version-action@main
