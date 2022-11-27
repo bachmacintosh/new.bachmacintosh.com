@@ -8,6 +8,8 @@ jobs:
   run-tests:
     name: Test Pull Request
     runs-on: ubuntu-latest
+    env:
+      WANIKANI_API_TOKEN: ${{ secrets.WANIKANI_API_TOKEN }}
     steps:
       - name: Check Safe to Test
         if: "!contains(github.event.pull_request.labels.*.name, 'safe to test') && !contains(github.event.pull_request.labels.*.name, 'dependencies')"
@@ -32,6 +34,4 @@ jobs:
       - name: Run ESLint
         run: npm run lint
       - name: Build Next.js App
-        run: "npm run build:ci"
-      - name: Export Static HTML
-        run: npm run export
+        run: "npm run build"
