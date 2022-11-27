@@ -9,6 +9,8 @@ jobs:
   run-tests:
     name: Run Tests
     runs-on: ubuntu-latest
+    env:
+      WANIKANI_API_TOKEN: ${{ secrets.WANIKANI_API_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
