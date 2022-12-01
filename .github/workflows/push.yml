@@ -5,6 +5,7 @@ on:
       - main
 permissions:
   contents: write
+  deployments: write
 jobs:
   run-tests:
     name: Run Tests
