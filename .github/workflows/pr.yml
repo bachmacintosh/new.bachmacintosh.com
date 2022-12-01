@@ -48,3 +48,5 @@ jobs:
         run: npm run lint
       - name: Build Next.js App
         run: "npm run build"
+      - name: Export Static HTML
+        run: "npm run export"
