@@ -1,13 +1,20 @@
 name: Tests (PR)
 on:
   pull_request_target:
-    types: [labeled, unlabeled, synchronize]
+    types:
+      - opened
+      - reopened
+      - labeled
+      - unlabeled
+      - synchronize
+      - ready_for_review
 permissions:
   actions: none
 jobs:
   run-tests:
     name: Test Pull Request
     runs-on: ubuntu-latest
+    if: ${{ !github.event.pull_request.draft }}
     env:
       WANIKANI_API_TOKEN: ${{ secrets.WANIKANI_API_TOKEN }}
     steps:
@@ -41,3 +48,5 @@ jobs:
         run: npm run lint
       - name: Build Next.js App
         run: "npm run build"
+      - name: Export Static HTML
+        run: "npm run export"
