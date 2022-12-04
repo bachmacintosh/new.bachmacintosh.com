@@ -4,6 +4,7 @@ import * as dotenv from "dotenv";
 import type {
 	WKAssignmentCollection,
 	WKAssignmentData,
+	WKAssignmentParameters,
 	WKCollection,
 	WKCollectionParameters,
 	WKError,
@@ -18,9 +19,12 @@ import type {
 	WKReviewParameters,
 	WKReviewStatisticCollection,
 	WKReviewStatisticData,
+	WKReviewStatisticParameters,
 	WKStudyMaterialCollection,
 	WKStudyMaterialData,
+	WKStudyMaterialParameters,
 	WKSubjectCollection,
+	WKSubjectParameters,
 	WKSummary,
 	WKUser,
 	WKVoiceActorCollection,
@@ -128,9 +132,7 @@ if (newAssignmentCache !== null) {
 		const subjectIndex = cache.subjects.data.findIndex((subject) => {
 			return subject.subjectId === item.subject_id;
 		});
-		if (subjectIndex === -1) {
-			throw new Error(`Unexpected missing Assignment Subject ID ${item.subject_id} in Subject Cache!`);
-		} else {
+		if (subjectIndex !== -1) {
 			cache.subjects.data[subjectIndex].assignment = item;
 		}
 	});
@@ -144,9 +146,7 @@ if (newReviewCache !== null) {
 		const subjectIndex = cache.subjects.data.findIndex((subject) => {
 			return subject.subjectId === item.subject_id;
 		});
-		if (subjectIndex === -1) {
-			throw new Error(`Unexpected missing Review Subject ID ${item.subject_id} in Subject Cache!`);
-		} else {
+		if (subjectIndex !== -1) {
 			cache.subjects.data[subjectIndex].reviews.push(item);
 		}
 	});
@@ -160,15 +160,11 @@ if (newReviewStatisticCache !== null) {
 		const subjectIndex = cache.subjects.data.findIndex((subject) => {
 			return subject.subjectId === item.subject_id;
 		});
-		if (subjectIndex === -1) {
-			throw new Error(`Unexpected missing Review Statistic Subject ID ${item.subject_id} in Subject Cache!`);
-		} else {
+		if (subjectIndex !== -1) {
 			cache.subjects.data[subjectIndex].reviewStatistic = item;
 		}
 	});
 }
-
-// Study Materials
 
 console.info("Checking for Study Material updates...");
 const newStudyMaterialCache = await getStudyMaterials();
@@ -178,9 +174,7 @@ if (newStudyMaterialCache !== null) {
 		const subjectIndex = cache.subjects.data.findIndex((subject) => {
 			return subject.subjectId === item.subject_id;
 		});
-		if (subjectIndex === -1) {
-			throw new Error(`Unexpected missing Study Material Subject ID ${item.subject_id} in Subject Cache!`);
-		} else {
+		if (subjectIndex !== -1) {
 			cache.subjects.data[subjectIndex].studyMaterials.push(item);
 		}
 	});
@@ -203,13 +197,6 @@ const newVoiceActorCache = await getVoiceActors();
 if (newVoiceActorCache !== null) {
 	cache.voiceActors = newVoiceActorCache;
 }
-
-console.info("Filtering out hidden Subjects...");
-
-const filteredSubjectCache = cache.subjects.data.filter((item) => {
-	return item.subjectData.hidden_at === null;
-});
-cache.subjects.data = filteredSubjectCache;
 
 console.info("Sorting Subject Reviews...");
 
@@ -280,7 +267,10 @@ async function getResets(): Promise<WaniKaniResetCache | null> {
 }
 
 async function getSubjects(): Promise<WaniKaniSubjectCache | null> {
-	let response = await fetchFromWaniKani(`${WANIKANI_BASE_URL}/subjects`, cache.subjects.etags.subjects);
+	const params: WKSubjectParameters = {
+		hidden: false,
+	};
+	let response = await fetchFromWaniKani(`${WANIKANI_BASE_URL}/subjects`, cache.subjects.etags.subjects, params);
 	if (response.status === HTTP_NOT_MODIFIED) {
 		console.info("No Subject updates found, skipping...");
 		return null;
@@ -323,7 +313,10 @@ async function getSubjects(): Promise<WaniKaniSubjectCache | null> {
 }
 
 async function getAssignments(): Promise<WaniKaniAssignmentCache | null> {
-	let response = await fetchFromWaniKani(`${WANIKANI_BASE_URL}/assignments`, cache.subjects.etags.assignments);
+	const params: WKAssignmentParameters = {
+		hidden: false,
+	};
+	let response = await fetchFromWaniKani(`${WANIKANI_BASE_URL}/assignments`, cache.subjects.etags.assignments, params);
 	if (response.status === HTTP_NOT_MODIFIED) {
 		console.info("No Assignment updates found, skipping...");
 		return null;
@@ -395,9 +388,13 @@ async function getReviews(): Promise<WaniKaniReviewCache | null> {
 }
 
 async function getReviewStatistics(): Promise<WaniKaniReviewStatisticCache | null> {
+	const params: WKReviewStatisticParameters = {
+		hidden: false,
+	};
 	let response = await fetchFromWaniKani(
 		`${WANIKANI_BASE_URL}/review_statistics`,
 		cache.subjects.etags.reviewStatistics,
+		params,
 	);
 	if (response.status === HTTP_NOT_MODIFIED) {
 		console.info("No Review Statistic updates found, skipping...");
@@ -427,7 +424,14 @@ async function getReviewStatistics(): Promise<WaniKaniReviewStatisticCache | nul
 }
 
 async function getStudyMaterials(): Promise<WaniKaniStudyMaterialCache | null> {
-	let response = await fetchFromWaniKani(`${WANIKANI_BASE_URL}/study_materials`, cache.subjects.etags.studyMaterials);
+	const params: WKStudyMaterialParameters = {
+		hidden: false,
+	};
+	let response = await fetchFromWaniKani(
+		`${WANIKANI_BASE_URL}/study_materials`,
+		cache.subjects.etags.studyMaterials,
+		params,
+	);
 	if (response.status === HTTP_NOT_MODIFIED) {
 		console.info("No Study Material updates found, skipping...");
 		return null;
