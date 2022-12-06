@@ -1,0 +1,131 @@
+---
+title: Fun Programming Considerations for SSNs
+date: "2022-07-12"
+coverImage: ""
+---
+
+In the United States, many American citizens, permanent residents (i.e. "green card" holders), and some eligible non-immigrant workers hold a Social Security Number, or SSN, to track wages and calculate Social Security Benefits of various types (e.g. Retirement, Survivor, and Disability Benefits). The number also serves as a means of helping identify and pay an individual, especially via the last 4 digits. My friends and I worked with them in the past, and wanted to share some considerations, and even a couple gotchas, we've seen along the way.
+
+# Background
+
+In the past, some friends and I have worked with SSNs, myself on payroll, timekeeping, labor, and pension-related programs for a company whose employees operated under a Collective Bargaining Agreement, or CBA (well, the hourly factory workers did anyway). The nice thing was, at least for hourly employees, most of the programming logic was spelled out right there in the Contract. And for better or worse, this usually only changed every 3-ish years when a new Contract was negotiated. The use of Social Security Numbers didn't arise too much, really only for pension credit calculation and seniority list calculation; by the time I started working there, most payroll was already in a corporate-owned solution. And recently, the remaining timekeeping and pension logic moved to a newer, completely centralized, corporate-wide solution, so no one has to worry about it anymore. Still, we learned a lot about dealing with SSNs, and along the way found some fundamental misunderstandings about them -- not just from programmers either.
+
+## What Makes Up a Valid SSN
+
+Many Americans know their Social Security Number by heart; it's much more secure than carrying the physical Social Security Card around, as we know the potential identity theft that can happen if the number falls into the wrong hands. There's some consistent structure to this number that one is familiar with if they know their number.
+
+### Common Bonds
+
+Regardless of when you got your Social Security Number, there are a couple of rules that factor into what could be a valid SSN.
+
+- **Consideration 1:** The number is 9 digits long, separated into 3 segments by dashes ( - ); the first segment is 3 digits, the second is 2 digits, and the third is 4 digits.
+- **Consideration 2:** None of the three segments can be all zeroes. For instance, it's impossible to have the SSN 000-12-3456, 123-00-4567, or 123-45-0000.
+- **Consideration 3:** The first three digits cannot be 666 (i.e. [the number of the beast in biblical terms](https://en.wikipedia.org/wiki/Number_of_the_beast)) for religious reasons.
+
+If you're a programmer tasked with making sure a given SSN is a valid potential SSN, you'd think you were all set with these 3 considerations. Just make sure it's 9 digits long (or 4 if dealing with the last 4 digits), split the number into the three segments, make sure none are zero, make sure the first one isn't 666, gg 2ez right? Let's find out!
+
+### The Good Ol' Days, a.k.a before June 25, 2011
+
+Most of you reading this who have an SSN will have an "old" SSN. Prior to June 25, 2011, the Social Security Administration (SSA) issued these numbers sequentially. Many people think that the entire number is sequential, and they're sort of correct? But in Programming Land, we can't settle on "sort of correct," unless an important document says otherwise -- more on that later.
+
+For now we have a few more considerations just for SSNs issued before June 25, 2011.
+
+- **Consideration 4:** The first segment is the Area Number, based on the location of the ZIP code of the applicant for the SSN.
+
+These Area Numbers are somewhat sequential, but not on the individual; rather, they're sequential going from the Northern to Southern, Eastern to Western United States, but even that isn't strictly sequential. [The SSA has a list of them](https://www.ssa.gov/employer/stateweb.htm) (and they even warn us about the Big Change on June 25, 2011 -- spoilers!). You'll even see their skipping over Area Number 666 in their table like we mentioned above. But also look at all the other "Not Issued" Area Numbers. That means:
+
+- **Consideration 5:** Not all Area Numbers have been issued prior to June 25, 2011.
+
+There are two more segments to handle; thankfully they're a little easier.
+
+- **Consideration 6:** The second segment is the Group Number, and is used only for internal SSA processes.
+
+There were rumors in the past that this mysterious Group Number was used for discriminatory purposes; the reality is that it was simply calculated when the record was entered into the files and computer systems at the SSA. Your Group Number has no real significance outside of that. [The SSA maintained a High Group List](https://www.ssa.gov/employer/ssnvhighgroup.htm) to show the highest Group Numbers assigned by year (and again, there's that scary warning at the top), which was a popular validation bullet point.
+
+- **Consideration 7:** The third segment is the Serial Number, and is issued sequentially under the Area Number and Group Number prior to June 25, 2011.
+
+### So Random XD, a.k.a after June 25, 2011
+
+Some of you wonderful readers might have children who got a newer SSN. And if you look at their Social Security Card, their number could be bigger or smaller than your number by a little or a lot. That's cause after June 25, 2011, while the segment names still stuck around, their significance and a majority of the rules under the previous heading drastically changed.
+
+- **Consideration 8:** Whole SSNs issued on or after June 25, 2011 are assigned at random by the SSA.
+
+This was done because of our exceeding (at the time we were approaching) 50% of all available SSNs when you factor in the Common Bonds above (about 900 million). Limiting issuance of certain SSNs to people living in certain states not only limited the remaining 50% of usable SSNs, but was also an identity theft concern; for instance, most of those assigned an SSN in North Carolina had an SSN beginning with 232 prior to the change.
+
+- **Consideration 9:** The first segment is no longer significant to applicants in specific states or groups.
+
+Since one of the major goals was to open up as many SSNs as possible, many previously unused Area Numbers were opened up, so that means:
+
+- **Consideration 10:** All Area Numbers except 000, 666, and 900-999 may be issued.
+
+The Group Number also lost what little significance it had outside the SSA, that being:
+
+- **Consideration 11:** The Group Number no longer follows a highest issuance under the High Group List, which is now frozen.
+
+Finally, the Serial Number also was no longer what one might call a "serial number." It, too, was subject to complete randomization.
+
+- **Consideration 12:** The Serial Number is no longer issued sequentially under the Area and Group Number
+
+# The Gotchas
+
+So we end up with 12 considerations when working with Social Security Numbers, and almost half of them are only applicable to SSNs issued within the past 11 or so years at time of writing. Even before the switch to randomization, there were still a couple of snags hit by programmers and laypersons alike.
+
+## Exhibit A: Seniority Calculation
+
+I mentioned at the beginning of this post that I worked with programs that calculated seniority under a Collective Bargaining Agreement. To the best of my knowledge, the contents of the latest effective Contract haven't been disclosed outside the company, the union, and the employees under both parties -- so I consider it confidential (it might not be, but I'm not gonna risk it, lol). What I can show you is [the 2010 Contract available from the Department of Labor (PDF)](https://olmsapps.dol.gov/olpdr/GetAttachmentServlet?docId=286). At least in 2010, Amphenol had the following language concerning breaking a tie between two workers hired on the same day/year for seniority:
+
+> Beginning October 24, 1998, when two or more employees start work on the same day, regardless of shift assignment, seniority order will be determined by comparing Social Security numbers. The nine-digit Social Security number will be considered one number, with the smallest number holder being considered as most senior.
+
+Regardless of the motivation behind using this method to break seniority ties, there are a couple key facts that people might miss:
+
+1. It shows bias against someone issued an SSN outside of NY State before June 25, 2011.
+2. It also shows bias against anyone issued an SSN after June 25, 2011.
+
+There has been speculation from some younger factory workers that this method was meant as an alternative to using one's birthdate to break seniority ties (i.e. age discrimination) since it could run on the assumption that a person with a smaller SSN was older than someone with a higher SSN. With what we know about the structure of an SSN though, a person born in New Hampshire who's 30 years old will have more seniority than someone born in New York who's 50 years old if they started at the same time. I'm not saying that it was used this way, just that it is flawed if that was the intent; remember there is the possibility that this was conceived with no discrimination in mind.
+
+I'm not allowed to say if this has been fixed yet. Maybe I'll update this post if/when the 2019 Contract is publicized by the Department of Labor, since that's what is in effect as of writing.
+
+## Exhibit B: Old School Validation
+
+This next gotcha comes from a friend who helped roll a medium business' HR software; it's a secondhand tale from a co-worker, before they themselves started working there. This system was designed before cheap, web-based solutions were readily available (i.e. not paying over $50 per head per month). Among other things it did was attempt to validate a Social Security Number provided by the employee on their job application before it was sent to the government for actual verification. This was written in the mid-2000's, before the switch to randomized numbers. So you had validation logic like checking the Area Number against the list of valid issued ones, checking the Group Number to make sure it was issued under the High Group List for the year, no zeroes in segments, no 666 Area Number, etc.
+
+The company learned the fun way this eventually didn't work, cause a new hire who became a permanent resident (i.e. got their "green card") in 2012, and got an SSN not long after, was unable to submit an application for employment on an open position (again, the website for the application was part of this custom-rolled HR software). They were told over and over their SSN was invalid, which gave them a panic; they actually called the SSA they were so scared. They called the company's HR, and their application was manually processed into the HR software, sidestepping the broken validation (which was removed soon after).
+
+## Exhibit C: Fake Fat Finger, Real Mistake
+
+The last gotcha comes from someone who contracts for, among others, a small law firm in Ohio. The firm collects some clients' SSNs to file paperwork in court among other record keeping needs. During onboarding, the client's SSN is verified through the SSA. Many of their clients are from Ohio, so it's a safe bet many of them have an SSN issued prior to June 25, 2011 with Area Numbers 268-302.
+
+Friend was called in on an Emergency ticket. A clerk had updated a client's SSN before submitting a document to a court, and that court's clerk had pointed out the error and rejected the document. The really fun part was that where the firm's clerk had updated the SSN, it cascaded to all of their client's records, including adding remarks to old records saying the client's SSN had changed. A simple restore from a backup on the affected database rows and documents solved the problem, the document was submitted again, and was accepted by the Court Clerk -- maybe a couple billable hours. But what would prompt someone to try and fix the SSN?
+
+Turns out the firm's clerk had thought that the client's SSN was mistyped; they thought their SSN should've begun with 287 (Ohio) instead of 587 (Not Issued), and that it must've been entered incorrectly; remember though that Area Number 587 is available for issuance since June 25, 2011. They'd also missed the indicator showing the SSN was verified by the SSA. Ultimately, a couple months after the incident, this lead to Friend updating the program so that a change to an SSN locks the record until the new SSN is verified by the SSA, and also made the SSA verification status more clear.
+
+# Takeaways
+
+There are two big sets of takeaways to avoid the three gotchas above, among others. It really depends on if you need to validate the format of an SSN, or actually verify that the SSN is correct to that person.
+
+## Validate The Format
+
+Thanks to randomization efforts by the SSA, this part is easy:
+
+1. It must be 9 digits long (or 4 if you only need the last 4 digits)
+2. The first three digits cannot be 000, 666, or 900-999
+3. The next two digits cannot be 00
+4. The next four digits cannot be 0000
+5. Any validation on Area and Group Numbers can only be done to SSNs issued before June 25, 2011; I don't recommend such validation as it introduces a point of failure if done under incorrect assumptions.
+
+That will guarantee that your SSN is formatted correctly.
+
+## Verify The SSN Exists and Its Owner
+
+There are many ways to verify if an SSN is real and to whom it belongs:
+
+1. The [Social Security Number Verification Service (SSNVS)](https://www.ssa.gov/employer/ssnv.htm) provided by the SSA for businesses to verify employee names and SSNs for W-2 wage reporting purposes
+2. [E-Verify](https://www.e-verify.gov/) is used to verify employees' hiring eligibility in the US; there's also a "self check" service that employees can use to submit their info and make sure their immigration record is correct.
+3. [Consent-Based Social Security Number Verification Service (CBSV)](https://www.ssa.gov/cbsv/), used for a fee by enrolled companies to verify a given SSN for various purposes, not just employment; the person providing an SSN fills out a form consenting to release their Social Security record.
+4. Various online services that claim to be able to verify a name and/or SSN, some free, others paid. I won't endorse any here, but a quick Google search will show you.
+
+How you receive a user's SSN, the purpose of verification, how quickly you need a response, and the format of the response will determine which of these is best for you.
+
+## The More You Know 🌠
+
+This info will probably be useless to anyone who doesn't write code for this sort of thing, but hey, maybe this cleared up some misconceptions for you. That's what counts for me anyway.

@@ -1,11 +1,21 @@
 import type { GetStaticPaths, GetStaticProps } from "next";
 import { getBlogPost, getBlogPostPaths } from "@/lib/blog";
 import type { BlogPostPageProps } from "@/types";
+import Hyperlink from "@/components/text/Hyperlink";
+import type { MDXComponents } from "mdx/types";
+import { MDXRemote } from "next-mdx-remote";
 
 export default function BlogPost({ post }: BlogPostPageProps): JSX.Element {
+	const components: MDXComponents = {
+		a: Hyperlink,
+	};
 	return (
 		<>
-			<h1>{post.frontMatter.fields.title}</h1>
+			<h1>{post.content.frontmatter?.title}</h1>
+			<MDXRemote
+				{...post.content}
+				components={components}
+			/>
 		</>
 	);
 }

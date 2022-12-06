@@ -1,6 +1,6 @@
 export default function Footer(): JSX.Element {
 	const startYear = 2022;
-	const commitShaLength = 7;
+	const currentYear = new Date().getFullYear();
 	return (
 		<div className="mt-5">
 			<hr className="border-primary-content" />
@@ -9,10 +9,9 @@ export default function Footer(): JSX.Element {
 				className="text-xs text-primary-content"
 			>
 				Copyright &copy;
-				{new Date().getFullYear() > startYear ? `2022-${new Date().getFullYear()}` : new Date().getFullYear()} Collin
-				Bachman, a.k.a BachMacintosh
+				{currentYear > startYear ? `${startYear}-${currentYear}` : startYear} Collin Bachman, a.k.a BachMacintosh
 				<br />
-				Version {process.env.version} Commit {process.env.commit?.slice(0, commitShaLength)}
+				Version {process.env.version}
 			</span>
 		</div>
 	);
