@@ -536,6 +536,9 @@ async function fetchFromWaniKani<
 	P extends WKCollectionParameters,
 	T extends WKCollection | WKError | WKReport | WKResource,
 >(url: string, etag?: string, params?: P): Promise<Response> {
+	const HTTP_TOO_MANY_REQUESTS = 429;
+	const ONE_MILLISECOND = 1000;
+	const SIXTY_SECONDS = 60000;
 	if (typeof process.env.WANIKANI_API_TOKEN === "undefined") {
 		throw new Error("Missing WaniKani API Token");
 	} else {
@@ -551,7 +554,17 @@ async function fetchFromWaniKani<
 		if (typeof params !== "undefined") {
 			baseUrl += stringifyParameters(params);
 		}
-		const initialResponse = await fetch(baseUrl, init);
+		let initialResponse = await fetch(baseUrl, init);
+		if (initialResponse.status === HTTP_TOO_MANY_REQUESTS) {
+			const currentEpoch = Math.floor(Date.now() / ONE_MILLISECOND);
+			const retryEpoch = initialResponse.headers.get("Ratelimit-Reset") ?? (currentEpoch + SIXTY_SECONDS).toString();
+			const sleepSeconds = parseInt(retryEpoch, 10) - currentEpoch;
+			console.info(`WaniKani API Rate Limit exceeded. Retrying in ${sleepSeconds} Seconds...`);
+			await new Promise((resolve) => {
+				setTimeout(resolve, sleepSeconds * ONE_MILLISECOND);
+			});
+			initialResponse = await fetch(baseUrl, init);
+		}
 		const returnedResponse = initialResponse.clone();
 		if (initialResponse.status === HTTP_NOT_MODIFIED) {
 			return returnedResponse;
