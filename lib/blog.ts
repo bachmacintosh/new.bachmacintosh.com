@@ -1,5 +1,4 @@
-import type { BlogFrontMatter, BlogPost, BlogPostPath } from "@/types";
-import type { MDXRemoteSerializeResult } from "next-mdx-remote";
+import type { BlogPost, BlogPostPath } from "@/types";
 import fs from "fs";
 import path from "path";
 import remarkGfm from "remark-gfm";
@@ -10,7 +9,7 @@ const POSTS_PATH = path.join(process.cwd(), "blog");
 export async function getBlogPost(slug: string): Promise<BlogPost> {
 	const postFilePath = path.join(POSTS_PATH, `${slug}.mdx`);
 	const source = await fs.promises.readFile(postFilePath);
-	const content: MDXRemoteSerializeResult<Record<string, unknown>, BlogFrontMatter> = await serialize(source, {
+	const content = await serialize(source, {
 		mdxOptions: {
 			remarkPlugins: [remarkGfm],
 			rehypePlugins: [],
@@ -31,7 +30,7 @@ export async function getAllBlogPosts(): Promise<BlogPost[]> {
 	const posts = await Promise.all(
 		postFilePaths.map(async (filePath) => {
 			const source = await fs.promises.readFile(path.join(POSTS_PATH, filePath));
-			const content: MDXRemoteSerializeResult<Record<string, unknown>, BlogFrontMatter> = await serialize(source, {
+			const content = await serialize(source, {
 				mdxOptions: {
 					remarkPlugins: [remarkGfm],
 					rehypePlugins: [],

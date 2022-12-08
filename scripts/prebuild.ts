@@ -47,8 +47,6 @@ import type {
 	WKVoiceActorData,
 } from "@bachmacintosh/wanikani-api-types/dist/v20170710";
 import { WK_API_REVISION, stringifyParameters } from "@bachmacintosh/wanikani-api-types/dist/v20170710";
-
-import type { MDXRemoteSerializeResult } from "next-mdx-remote";
 import fs from "fs";
 import path from "path";
 import remarkGfm from "remark-gfm";
@@ -587,7 +585,7 @@ export async function verifyFrontMatter(): Promise<void> {
 	const posts = await Promise.all(
 		postFilePaths.map(async (filePath) => {
 			const source = await fs.promises.readFile(path.join(POSTS_PATH, filePath));
-			const content: MDXRemoteSerializeResult<Record<string, unknown>, BlogFrontMatter> = await serialize(source, {
+			const content = await serialize(source, {
 				mdxOptions: {
 					remarkPlugins: [remarkGfm],
 					rehypePlugins: [],

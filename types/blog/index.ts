@@ -9,7 +9,7 @@ export interface BlogPostPageProps {
 }
 
 export interface BlogPost {
-	content: MDXRemoteSerializeResult<Record<string, unknown>, BlogFrontMatter>;
+	content: MDXRemoteSerializeResult;
 	slug: string;
 }
 
