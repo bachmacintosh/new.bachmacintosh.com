@@ -1,11 +1,4 @@
-export type {
-	BlogFrontMatter,
-	BlogIndexProps,
-	BlogPost,
-	BlogPostMetadata,
-	BlogPostPageProps,
-	BlogPostPath,
-} from "./blog";
+export type { BlogFrontMatter, BlogIndexProps, BlogPost, BlogPostPageProps, BlogPostPath } from "./blog";
 export type {
 	WaniKaniAssignmentCache,
 	WaniKaniCache,

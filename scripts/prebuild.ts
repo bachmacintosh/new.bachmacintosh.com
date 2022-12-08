@@ -2,6 +2,22 @@
 API */
 import * as dotenv from "dotenv";
 import type {
+	BlogFrontMatter,
+	BlogPost,
+	WaniKaniAssignmentCache,
+	WaniKaniCache,
+	WaniKaniLevelProgressionCache,
+	WaniKaniResetCache,
+	WaniKaniReviewCache,
+	WaniKaniReviewStatisticCache,
+	WaniKaniStudyMaterialCache,
+	WaniKaniSubjectCache,
+	WaniKaniSubjectItemCache,
+	WaniKaniSummaryCache,
+	WaniKaniUserCache,
+	WaniKaniVoiceActorCache,
+} from "@/types";
+import type {
 	WKAssignmentCollection,
 	WKAssignmentData,
 	WKAssignmentParameters,
@@ -31,23 +47,10 @@ import type {
 	WKVoiceActorData,
 } from "@bachmacintosh/wanikani-api-types/dist/v20170710";
 import { WK_API_REVISION, stringifyParameters } from "@bachmacintosh/wanikani-api-types/dist/v20170710";
-import type {
-	WaniKaniAssignmentCache,
-	WaniKaniCache,
-	WaniKaniLevelProgressionCache,
-	WaniKaniResetCache,
-	WaniKaniReviewCache,
-	WaniKaniReviewStatisticCache,
-	WaniKaniStudyMaterialCache,
-	WaniKaniSubjectCache,
-	WaniKaniSubjectItemCache,
-	WaniKaniSummaryCache,
-	WaniKaniUserCache,
-	WaniKaniVoiceActorCache,
-} from "@/types";
-
 import fs from "fs";
 import path from "path";
+import remarkGfm from "remark-gfm";
+import { serialize } from "next-mdx-remote/serialize";
 
 if (typeof process.env.GITHUB_ACTIONS === "undefined" && typeof process.env.VERCEL === "undefined") {
 	console.info("Loading environment from .env.local...");
@@ -57,7 +60,7 @@ if (typeof process.env.GITHUB_ACTIONS === "undefined" && typeof process.env.VERC
 }
 console.info("\n");
 
-const TOTAL_STEPS = 1;
+const TOTAL_STEPS = 2;
 const HTTP_NOT_MODIFIED = 304;
 const WANIKANI_BASE_URL = "https://api.wanikani.com/v2";
 const WANIKANI_CACHE_PATH = path.resolve(process.cwd(), ".wanikani");
@@ -207,6 +210,13 @@ cache.subjects.data.forEach((item) => {
 });
 
 await fs.promises.writeFile(WANIKANI_CACHE_PATH, JSON.stringify(cache), "utf-8");
+
+console.info("\n");
+console.info("---------------------------------------");
+console.info(`2/${TOTAL_STEPS} - Validate Blog Posts' Front Matter`);
+console.info("---------------------------------------");
+
+await verifyFrontMatter();
 
 async function getLevelProgressions(): Promise<WaniKaniLevelProgressionCache | null> {
 	let response = await fetchFromWaniKani(`${WANIKANI_BASE_URL}/level_progressions`, cache.levelProgressions.etag);
@@ -524,6 +534,9 @@ async function fetchFromWaniKani<
 	P extends WKCollectionParameters,
 	T extends WKCollection | WKError | WKReport | WKResource,
 >(url: string, etag?: string, params?: P): Promise<Response> {
+	const HTTP_TOO_MANY_REQUESTS = 429;
+	const ONE_MILLISECOND = 1000;
+	const SIXTY_SECONDS = 60000;
 	if (typeof process.env.WANIKANI_API_TOKEN === "undefined") {
 		throw new Error("Missing WaniKani API Token");
 	} else {
@@ -539,7 +552,17 @@ async function fetchFromWaniKani<
 		if (typeof params !== "undefined") {
 			baseUrl += stringifyParameters(params);
 		}
-		const initialResponse = await fetch(baseUrl, init);
+		let initialResponse = await fetch(baseUrl, init);
+		if (initialResponse.status === HTTP_TOO_MANY_REQUESTS) {
+			const currentEpoch = Math.floor(Date.now() / ONE_MILLISECOND);
+			const retryEpoch = initialResponse.headers.get("Ratelimit-Reset") ?? (currentEpoch + SIXTY_SECONDS).toString();
+			const sleepSeconds = parseInt(retryEpoch, 10) - currentEpoch;
+			console.info(`WaniKani API Rate Limit exceeded. Retrying in ${sleepSeconds} Seconds...`);
+			await new Promise((resolve) => {
+				setTimeout(resolve, sleepSeconds * ONE_MILLISECOND);
+			});
+			initialResponse = await fetch(baseUrl, init);
+		}
 		const returnedResponse = initialResponse.clone();
 		if (initialResponse.status === HTTP_NOT_MODIFIED) {
 			return returnedResponse;
@@ -550,5 +573,136 @@ async function fetchFromWaniKani<
 		} else {
 			throw new Error(`${json.code} - ${json.error}`);
 		}
+	}
+}
+
+export async function verifyFrontMatter(): Promise<void> {
+	const POSTS_PATH = path.join(process.cwd(), "blog");
+	const initialPaths = await fs.promises.readdir(POSTS_PATH);
+	const postFilePaths = initialPaths.filter((file) => {
+		return /\.mdx?$/u.test(file);
+	});
+	const posts = await Promise.all(
+		postFilePaths.map(async (filePath) => {
+			const source = await fs.promises.readFile(path.join(POSTS_PATH, filePath));
+			const content = await serialize(source, {
+				mdxOptions: {
+					remarkPlugins: [remarkGfm],
+					rehypePlugins: [],
+				},
+				parseFrontmatter: true,
+			});
+			const slug = filePath.replace(/\.mdx?$/u, "");
+
+			const post: BlogPost = {
+				content,
+				slug,
+			};
+			return post;
+		}),
+	);
+	posts.forEach((post) => {
+		if (typeof post.content.frontmatter === "undefined") {
+			throw new Error(`Missing Front Matter on Blog Post ${post.slug}.md`);
+		} else {
+			const missingFields: string[] = [];
+			const exampleFrontMatter: BlogFrontMatter = {
+				title: "Hello World",
+				date: "2022-12-01",
+				coverImage: "",
+			};
+			Object.keys(exampleFrontMatter).forEach((key) => {
+				if (typeof post.content.frontmatter !== "undefined" && typeof post.content.frontmatter[key] === "undefined") {
+					missingFields.push(key);
+				}
+			});
+			if (missingFields.length > 0) {
+				throw new Error(
+					`Blog Post ${post.slug}.md is missing the following Front Matter fields: ${missingFields.toString()}`,
+				);
+			}
+			isValidDate(post.slug, post.content.frontmatter.date);
+
+			if (post.content.frontmatter.coverImage) {
+				try {
+					const url = new URL(post.content.frontmatter.coverImage);
+					if (url.protocol !== "http:" && url.protocol !== "https:") {
+						throw new Error("URL must be either HTTP or HTTPS.");
+					}
+				} catch (error) {
+					if (error instanceof Error) {
+						throw new Error(
+							`Blog Post ${post.slug}.md has invalid URL: ${post.content.frontmatter.coverImage} - ${error.message}`,
+						);
+					} else {
+						throw new Error(`Blog Post ${post.slug}.md has invalid URL ${post.content.frontmatter.coverImage}`);
+					}
+				}
+			}
+		}
+	});
+	console.info("All Blog Post Front Matter is valid!");
+}
+
+function isValidDate(slug: string, date: string): void {
+	const datePattern = /(?<year>\d{4})-(?<month>[01]\d)-(?<day>[0-3]\d)/u;
+	const matches = datePattern.exec(date);
+	if (matches === null || typeof matches.groups === "undefined") {
+		throw new Error(`Blog Post ${slug}.md has an invalid date, should be formatted as yyyy-mm-dd .`);
+	}
+	const year = parseInt(matches.groups.year, 10);
+	const month = parseInt(matches.groups.month, 10);
+	const day = parseInt(matches.groups.day, 10);
+	const fourYears = 4;
+	const oneHundredYears = 100;
+	const fourHundredYears = 400;
+	const isLeapYear = (year % fourYears === 0 && year % oneHundredYears !== 0) || year % fourHundredYears === 0;
+	const monthsInYear = 12;
+	const thirtyOneDays = 31;
+	const thirtyDays = 30;
+	const twentyNineDays = 29;
+	const months = {
+		january: 1,
+		february: 2,
+		march: 3,
+		april: 4,
+		may: 5,
+		june: 6,
+		july: 7,
+		august: 8,
+		september: 9,
+		october: 10,
+		november: 11,
+		december: 12,
+	};
+	const monthsWithThirtyDays = [months.april, months.june, months.september, months.november];
+	const monthsWithThirtyOneDays = [
+		months.january,
+		months.march,
+		months.may,
+		months.july,
+		months.august,
+		months.october,
+		months.december,
+	];
+	if (month <= 0) {
+		throw new Error(`Blog Post ${slug}.md has an invalid date, Month ${month} < 1.`);
+	}
+	if (month > monthsInYear) {
+		throw new Error(`Blog Post ${slug}.md has an invalid date, Month ${month} > 12.`);
+	}
+	if (day <= 0) {
+		throw new Error(`Blog Post ${slug}.md has an invalid date, Day ${day} < 1.`);
+	}
+	if (monthsWithThirtyOneDays.includes(month) && day > thirtyOneDays) {
+		throw new Error(`Blog Post ${slug}.md has an invalid date, Month ${month} has 31 days, day is ${day}.`);
+	}
+	if (monthsWithThirtyDays.includes(month) && day > thirtyDays) {
+		throw new Error(`Blog Post ${slug}.md has an invalid date, Month ${month} has 30 days, day is ${day}.`);
+	}
+	if (month === months.february && ((isLeapYear && day >= thirtyDays) || (!isLeapYear && day >= twentyNineDays))) {
+		throw new Error(
+			`Blog Post ${slug}.md has an invalid date, February has ${isLeapYear ? "29" : "28"} days, day is ${day}`,
+		);
 	}
 }

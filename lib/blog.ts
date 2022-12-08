@@ -1,6 +1,5 @@
-import type { BlogFrontMatter, BlogPost, BlogPostMetadata, BlogPostPath } from "@/types";
+import type { BlogPost, BlogPostPath } from "@/types";
 import fs from "fs";
-import matter from "gray-matter";
 import path from "path";
 import remarkGfm from "remark-gfm";
 import { serialize } from "next-mdx-remote/serialize";
@@ -10,29 +9,20 @@ const POSTS_PATH = path.join(process.cwd(), "blog");
 export async function getBlogPost(slug: string): Promise<BlogPost> {
 	const postFilePath = path.join(POSTS_PATH, `${slug}.mdx`);
 	const source = await fs.promises.readFile(postFilePath);
-	const { content, data } = matter(source);
-	const frontMatter: BlogFrontMatter = {
-		fields: {
-			title: slug,
-		},
-	};
-	if (typeof data.title === "string") {
-		frontMatter.fields.title = data.title;
-	}
-	const mdx = await serialize(content, {
+	const content = await serialize(source, {
 		mdxOptions: {
 			remarkPlugins: [remarkGfm],
 			rehypePlugins: [],
 		},
-		scope: data,
+		parseFrontmatter: true,
 	});
 	return {
-		mdx,
-		frontMatter,
+		content,
+		slug,
 	};
 }
 
-export async function getAllBlogPosts(): Promise<BlogPostMetadata[]> {
+export async function getAllBlogPosts(): Promise<BlogPost[]> {
 	const initialPaths = await fs.promises.readdir(POSTS_PATH);
 	const postFilePaths = initialPaths.filter((file) => {
 		return /\.mdx?$/u.test(file);
@@ -40,24 +30,28 @@ export async function getAllBlogPosts(): Promise<BlogPostMetadata[]> {
 	const posts = await Promise.all(
 		postFilePaths.map(async (filePath) => {
 			const source = await fs.promises.readFile(path.join(POSTS_PATH, filePath));
-			const { data, excerpt } = matter(source, { excerpt: true });
-			const slug = filePath.replace(/\.mdx?$/u, "");
-			let title = slug;
-			if (typeof data.title === "string") {
-				({ title } = data);
-			}
-			const postMetadata: BlogPostMetadata = {
-				frontMatter: {
-					excerpt,
-					fields: {
-						title,
-					},
+			const content = await serialize(source, {
+				mdxOptions: {
+					remarkPlugins: [remarkGfm],
+					rehypePlugins: [],
 				},
+				parseFrontmatter: true,
+			});
+			const slug = filePath.replace(/\.mdx?$/u, "");
+
+			const post: BlogPost = {
+				content,
 				slug,
 			};
-			return postMetadata;
+			return post;
 		}),
 	);
+	posts.sort((postA, postB) => {
+		if (typeof postA.content.frontmatter === "undefined" || typeof postB.content.frontmatter === "undefined") {
+			throw new Error("Missing date field in Front Matter!");
+		}
+		return new Date(postB.content.frontmatter.date).getTime() - new Date(postA.content.frontmatter.date).getTime();
+	});
 	return posts;
 }
 

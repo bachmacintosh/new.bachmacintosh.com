@@ -31,6 +31,7 @@ module.exports = {
 			{
 				johan: {
 					"base-100": "#000D14",
+					"base-content": "#eeeeee",
 					primary: "#0E316D",
 					"primary-content": "#AFC6E4",
 					"primary-focus": "#001B57",

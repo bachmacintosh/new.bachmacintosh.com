@@ -6,11 +6,13 @@ export default function Blog({ posts }: BlogIndexProps): JSX.Element {
 	return (
 		<>
 			<h1>Blog Posts</h1>
-			<ul>
-				{posts.map((post) => {
-					return <li key={post.slug}>{post.frontMatter.fields.title}</li>;
-				})}
-			</ul>
+			{posts.map((post) => {
+				return (
+					<ul key={post.slug}>
+						<li>{post.content.frontmatter?.title}</li>
+					</ul>
+				);
+			})}
 		</>
 	);
 }

@@ -5,4 +5,12 @@ module.exports = {
 	singleQuote: false,
 	trailingComma: "all",
 	useTabs: true,
+	overrides: [
+		{
+			files: ["*.md", "*.mdx"],
+			options: {
+				useTabs: false,
+			},
+		},
+	],
 };
