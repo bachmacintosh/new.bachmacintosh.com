@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export default function Hyperlink(props: JSX.IntrinsicElements["a"]): JSX.Element {
-	const linkClass = "text-blue-diamond hover:text-white underline";
+	const linkClass = "text-primary-content hover:text-base-content underline";
 	const external = typeof props.href !== "undefined" && /^https?:\/\//u.test(props.href);
 	if (external) {
 		return (
