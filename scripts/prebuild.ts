@@ -587,28 +587,67 @@ async function fetchFromWaniKani<
 }
 
 export async function verifyFrontMatter(): Promise<void> {
+	const posts: BlogPost[] = [];
 	const POSTS_PATH = path.join(process.cwd(), "blog");
-	const initialPaths = await fs.promises.readdir(POSTS_PATH);
-	const postFilePaths = initialPaths.filter((file) => {
-		return /\.mdx?$/u.test(file);
-	});
-	const posts = await Promise.all(
-		postFilePaths.map(async (filePath) => {
-			const source = await fs.promises.readFile(path.join(POSTS_PATH, filePath));
-			const content = await serialize(source, {
-				mdxOptions: {
-					remarkPlugins: [remarkGfm],
-					rehypePlugins: [],
-				},
-				parseFrontmatter: true,
-			});
-			const slug = filePath.replace(/\.mdx?$/u, "");
-
-			const post: BlogPost = {
-				content,
-				slug,
-			};
-			return post;
+	const initialPaths = await fs.promises.readdir(POSTS_PATH, { withFileTypes: true });
+	const yearFolders = initialPaths
+		.filter((dirent) => {
+			return dirent.isDirectory();
+		})
+		.map((dirent) => {
+			return dirent.name;
+		});
+	await Promise.all(
+		yearFolders.map(async (year) => {
+			const yearPath = path.join(POSTS_PATH, year);
+			const initialMonthPaths = await fs.promises.readdir(yearPath, { withFileTypes: true });
+			const monthFolders = initialMonthPaths
+				.filter((dirent) => {
+					return dirent.isDirectory();
+				})
+				.map((dirent) => {
+					return dirent.name;
+				});
+			await Promise.all(
+				monthFolders.map(async (month) => {
+					const monthPath = path.join(POSTS_PATH, year, month);
+					const initialDayPaths = await fs.promises.readdir(monthPath, { withFileTypes: true });
+					const dayFolders = initialDayPaths
+						.filter((dirent) => {
+							return dirent.isDirectory();
+						})
+						.map((dirent) => {
+							return dirent.name;
+						});
+					await Promise.all(
+						dayFolders.map(async (day) => {
+							const initialPostPath = path.join(POSTS_PATH, year, month, day);
+							const initialPostFiles = await fs.promises.readdir(initialPostPath);
+							const postFiles = initialPostFiles.filter((file) => {
+								return /\.mdx?$/u.test(file);
+							});
+							await Promise.all(
+								postFiles.map(async (file) => {
+									const slug = file.replace(/\.mdx?$/u, "");
+									console.info(`Validating Post: /blog/${year}/${month}/${day}/${file}`);
+									const source = await fs.promises.readFile(path.join(POSTS_PATH, year, month, day, file));
+									const content = await serialize(source, {
+										mdxOptions: {
+											remarkPlugins: [remarkGfm],
+											rehypePlugins: [],
+										},
+										parseFrontmatter: true,
+									});
+									posts.push({
+										content,
+										slug,
+									});
+								}),
+							);
+						}),
+					);
+				}),
+			);
 		}),
 	);
 	posts.forEach((post) => {

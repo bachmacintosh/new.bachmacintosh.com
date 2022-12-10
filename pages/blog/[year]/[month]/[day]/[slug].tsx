@@ -63,8 +63,14 @@ export default function BlogPost({ post }: BlogPostPageProps): JSX.Element {
 }
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
-	if (typeof params !== "undefined" && typeof params.slug === "string") {
-		const post = await getBlogPost(params.slug);
+	if (
+		typeof params !== "undefined" &&
+		typeof params.year === "string" &&
+		typeof params.month === "string" &&
+		typeof params.day === "string" &&
+		typeof params.slug === "string"
+	) {
+		const post = await getBlogPost(params.year, params.month, params.day, params.slug);
 		return {
 			props: {
 				post,

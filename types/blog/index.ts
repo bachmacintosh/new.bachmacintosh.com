@@ -21,6 +21,9 @@ export interface BlogFrontMatter extends Record<string, string> {
 
 export interface BlogPostPath {
 	params: {
+		year: string;
+		month: string;
+		day: string;
 		slug: string;
 	};
 }
