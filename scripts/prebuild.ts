@@ -675,8 +675,8 @@ export async function verifyFrontMatter(): Promise<void> {
 			if (post.content.frontmatter.coverImage) {
 				try {
 					const url = new URL(post.content.frontmatter.coverImage);
-					if (url.protocol !== "http:" && url.protocol !== "https:") {
-						throw new Error("URL must be either HTTP or HTTPS.");
+					if (url.protocol !== "https:") {
+						throw new Error("URL must be HTTPS.");
 					}
 				} catch (error) {
 					if (error instanceof Error) {
