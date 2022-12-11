@@ -1,6 +1,6 @@
 {
 	"name": "www2",
-	"version": "0.6.1",
+	"version": "0.6.2",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -38,7 +38,7 @@
 		"next": "13.0.6",
 		"next-mdx-remote": "4.2.0",
 		"postcss": "8.4.19",
-		"prettier": "2.8.0",
+		"prettier": "2.8.1",
 		"react": "18.2.0",
 		"react-dom": "18.2.0",
 		"remark-gfm": "3.0.1",
