@@ -30,7 +30,6 @@ import type {
 	WKResetCollection,
 	WKResetData,
 	WKResource,
-	WKReviewCollection,
 	WKReviewData,
 	WKReviewParameters,
 	WKReviewStatisticCollection,
@@ -110,11 +109,6 @@ console.info(`2/${TOTAL_STEPS} - Validate Blog Posts' Front Matter`);
 console.info("---------------------------------------");
 
 await verifyFrontMatter();
-
-console.info("\n");
-console.info("---------------------------------------------");
-console.info(`3/${TOTAL_STEPS} - Fetch Blog Cover Images from Cloudinary`);
-console.info("---------------------------------------------");
 
 async function cacheWaniKani(): Promise<void> {
 	try {
@@ -379,15 +373,17 @@ async function getReviews(): Promise<WaniKaniReviewCache | null> {
 	const reviewParams: WKReviewParameters = {
 		updated_after: resetDate,
 	};
-	let response = await fetchFromWaniKani(`${WANIKANI_BASE_URL}/reviews`, cache.subjects.etags.reviews, reviewParams);
+	const response = await fetchFromWaniKani(`${WANIKANI_BASE_URL}/reviews`, cache.subjects.etags.reviews, reviewParams);
 	if (response.status === HTTP_NOT_MODIFIED) {
 		console.info("No Review updates found, skipping...");
 		return null;
 	} else {
 		console.info("Updating Reviews...");
 		const etag = response.headers.get("Etag") ?? "";
-		let moreReviews = true;
 		const reviewData: WKReviewData[] = [];
+
+		/* There's an issue with the WaniKani API fetching reviews, disabling for now...
+		let moreReviews = true;
 		let reviewCollection = (await response.json()) as WKReviewCollection;
 		while (moreReviews) {
 			reviewCollection.data.forEach((item) => {
@@ -400,6 +396,8 @@ async function getReviews(): Promise<WaniKaniReviewCache | null> {
 				reviewCollection = (await response.json()) as WKReviewCollection;
 			}
 		}
+		*/
+
 		return {
 			etag,
 			data: reviewData,
