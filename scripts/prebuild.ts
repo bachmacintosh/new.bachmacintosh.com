@@ -80,13 +80,13 @@ let cache: WaniKaniCache = {
 		data: [],
 	},
 	subjects: {
-		etags: {
+		updated_after: {
 			assignments: "",
+			reviews: "",
 			reviewStatistics: "",
 			studyMaterials: "",
 			subjects: "",
 		},
-		reviews_updated_after: "",
 		data: [],
 	},
 	summary: {
@@ -136,13 +136,25 @@ async function cacheWaniKani(): Promise<void> {
 	console.info("Checking for Subject updates...");
 	const newSubjectCache = await getSubjects();
 	if (newSubjectCache !== null) {
-		cache.subjects = newSubjectCache;
+		cache.subjects.updated_after.subjects = newSubjectCache.updated_after.subjects;
+		newSubjectCache.data.forEach((subject) => {
+			const subjectCacheIndex = cache.subjects.data.findIndex((item) => {
+				return subject.subjectId === item.subjectId;
+			});
+			if (subjectCacheIndex === -1) {
+				cache.subjects.data.push(subject);
+			} else {
+				cache.subjects.data[subjectCacheIndex].subjectData = subject.subjectData;
+			}
+		});
 	}
 
 	console.info("Checking for Assignment updates...");
 	const newAssignmentCache = await getAssignments();
 	if (newAssignmentCache !== null) {
-		cache.subjects.etags.assignments = newAssignmentCache.etag;
+		if (newAssignmentCache.updated_after !== "") {
+			cache.subjects.updated_after.assignments = newAssignmentCache.updated_after;
+		}
 		newAssignmentCache.data.forEach((item) => {
 			const subjectIndex = cache.subjects.data.findIndex((subject) => {
 				return subject.subjectId === item.subject_id;
@@ -156,8 +168,8 @@ async function cacheWaniKani(): Promise<void> {
 	console.info("Checking for Review updates...");
 	const newReviewCache = await getReviews();
 	if (newReviewCache !== null) {
-		if (newReviewCache.data_updated_at !== "") {
-			cache.subjects.reviews_updated_after = newReviewCache.data_updated_at;
+		if (newReviewCache.updated_after !== "") {
+			cache.subjects.updated_after.reviews = newReviewCache.updated_after;
 		}
 		newReviewCache.data.forEach((item) => {
 			const subjectIndex = cache.subjects.data.findIndex((subject) => {
@@ -172,7 +184,10 @@ async function cacheWaniKani(): Promise<void> {
 	console.info("Checking for Review Statistic updates...");
 	const newReviewStatisticCache = await getReviewStatistics();
 	if (newReviewStatisticCache !== null) {
-		cache.subjects.etags.reviewStatistics = newReviewStatisticCache.etag;
+		console.info(newReviewStatisticCache.updated_after);
+		if (newReviewStatisticCache.updated_after !== "") {
+			cache.subjects.updated_after.reviewStatistics = newReviewStatisticCache.updated_after;
+		}
 		newReviewStatisticCache.data.forEach((item) => {
 			const subjectIndex = cache.subjects.data.findIndex((subject) => {
 				return subject.subjectId === item.subject_id;
@@ -186,13 +201,22 @@ async function cacheWaniKani(): Promise<void> {
 	console.info("Checking for Study Material updates...");
 	const newStudyMaterialCache = await getStudyMaterials();
 	if (newStudyMaterialCache !== null) {
-		cache.subjects.etags.studyMaterials = newStudyMaterialCache.etag;
+		if (newStudyMaterialCache.updated_after !== "") {
+			cache.subjects.updated_after.studyMaterials = newStudyMaterialCache.updated_after;
+		}
 		newStudyMaterialCache.data.forEach((item) => {
 			const subjectIndex = cache.subjects.data.findIndex((subject) => {
 				return subject.subjectId === item.subject_id;
 			});
 			if (subjectIndex !== -1) {
-				cache.subjects.data[subjectIndex].studyMaterials.push(item);
+				const studyMaterialIndex = cache.subjects.data[subjectIndex].studyMaterials.findIndex((material) => {
+					return new Date(material.created_at).getTime() === new Date(item.created_at).getTime();
+				});
+				if (studyMaterialIndex === -1) {
+					cache.subjects.data[subjectIndex].studyMaterials.push(item);
+				} else {
+					cache.subjects.data[subjectIndex].studyMaterials[studyMaterialIndex] = item;
+				}
 			}
 		});
 	}
@@ -307,24 +331,27 @@ async function getSubjects(): Promise<WaniKaniSubjectCache | null> {
 	const params: WKSubjectParameters = {
 		hidden: false,
 	};
-	let response = await fetchFromWaniKani(`${WANIKANI_BASE_URL}/subjects`, cache.subjects.etags.subjects, params);
-	if (response.status === HTTP_NOT_MODIFIED) {
+	if (cache.subjects.updated_after.subjects !== "") {
+		params.updated_after = cache.subjects.updated_after.subjects as WKDatableString;
+	}
+	let response = await fetchFromWaniKani(`${WANIKANI_BASE_URL}/subjects`, "", params);
+	let subjectCollection = (await response.json()) as WKSubjectCollection;
+	if (subjectCollection.data_updated_at === null || subjectCollection.data.length === 0) {
 		console.info("No Subject updates found, skipping...");
 		return null;
 	} else {
 		console.info("Updating Subjects...");
 		let moreSubjects = true;
 		const subjectCache: WaniKaniSubjectCache = {
-			etags: {
-				subjects: response.headers.get("Etag") ?? "",
-				assignments: "",
-				reviewStatistics: "",
-				studyMaterials: "",
+			updated_after: {
+				subjects: subjectCollection.data_updated_at,
+				assignments: cache.subjects.updated_after.assignments,
+				reviews: cache.subjects.updated_after.reviews,
+				reviewStatistics: cache.subjects.updated_after.reviewStatistics,
+				studyMaterials: cache.subjects.updated_after.studyMaterials,
 			},
-			reviews_updated_after: "",
 			data: [],
 		};
-		let subjectCollection = (await response.json()) as WKSubjectCollection;
 		while (moreSubjects) {
 			subjectCollection.data.forEach((item) => {
 				const newSubjectCacheItem: WaniKaniSubjectItemCache = {
@@ -353,16 +380,19 @@ async function getAssignments(): Promise<WaniKaniAssignmentCache | null> {
 	const params: WKAssignmentParameters = {
 		hidden: false,
 	};
-	let response = await fetchFromWaniKani(`${WANIKANI_BASE_URL}/assignments`, cache.subjects.etags.assignments, params);
-	if (response.status === HTTP_NOT_MODIFIED) {
+	if (cache.subjects.updated_after.assignments !== "") {
+		params.updated_after = cache.subjects.updated_after.assignments as WKDatableString;
+	}
+	let response = await fetchFromWaniKani(`${WANIKANI_BASE_URL}/assignments`, "", params);
+	let assignmentCollection = (await response.json()) as WKAssignmentCollection;
+	if (assignmentCollection.data_updated_at === null || assignmentCollection.data.length === 0) {
 		console.info("No Assignment updates found, skipping...");
 		return null;
 	} else {
 		console.info("Updating Assignments...");
 		let moreAssignments = true;
-		const etag = response.headers.get("Etag") ?? "";
+		const updateAfter = assignmentCollection.data_updated_at;
 		const assignmentData: WKAssignmentData[] = [];
-		let assignmentCollection = (await response.json()) as WKAssignmentCollection;
 		while (moreAssignments) {
 			assignmentCollection.data.forEach((item) => {
 				assignmentData.push(item.data);
@@ -375,7 +405,7 @@ async function getAssignments(): Promise<WaniKaniAssignmentCache | null> {
 			}
 		}
 		return {
-			etag,
+			updated_after: updateAfter,
 			data: assignmentData,
 		};
 	}
@@ -383,8 +413,8 @@ async function getAssignments(): Promise<WaniKaniAssignmentCache | null> {
 
 async function getReviews(): Promise<WaniKaniReviewCache | null> {
 	const reviewParams: WKReviewParameters = {};
-	if (cache.subjects.reviews_updated_after !== "") {
-		reviewParams.updated_after = cache.subjects.reviews_updated_after as WKDatableString;
+	if (cache.subjects.updated_after.reviews !== "") {
+		reviewParams.updated_after = cache.subjects.updated_after.reviews as WKDatableString;
 	}
 	let response = await fetchFromWaniKani(`${WANIKANI_BASE_URL}/reviews`, "", reviewParams);
 	let reviewCollection = (await response.json()) as WKReviewCollection;
@@ -409,7 +439,7 @@ async function getReviews(): Promise<WaniKaniReviewCache | null> {
 		}
 		return {
 			data: reviewData,
-			data_updated_at: updateAfter,
+			updated_after: updateAfter,
 		};
 	}
 }
@@ -418,19 +448,18 @@ async function getReviewStatistics(): Promise<WaniKaniReviewStatisticCache | nul
 	const params: WKReviewStatisticParameters = {
 		hidden: false,
 	};
-	let response = await fetchFromWaniKani(
-		`${WANIKANI_BASE_URL}/review_statistics`,
-		cache.subjects.etags.reviewStatistics,
-		params,
-	);
-	if (response.status === HTTP_NOT_MODIFIED) {
+	if (cache.subjects.updated_after.reviewStatistics !== "") {
+		params.updated_after = cache.subjects.updated_after.reviewStatistics as WKDatableString;
+	}
+	let response = await fetchFromWaniKani(`${WANIKANI_BASE_URL}/review_statistics`, "", params);
+	let reviewStatisticCollection = (await response.json()) as WKReviewStatisticCollection;
+	if (reviewStatisticCollection.data_updated_at === null || reviewStatisticCollection.data.length === 0) {
 		console.info("No Review Statistic updates found, skipping...");
 		return null;
 	} else {
 		console.info("Updating Review Statistics...");
-		const etag = response.headers.get("Etag") ?? "";
+		const updateAfter = reviewStatisticCollection.data_updated_at;
 		let moreReviewStatistics = true;
-		let reviewStatisticCollection = (await response.json()) as WKReviewStatisticCollection;
 		const reviewStatisticData: WKReviewStatisticData[] = [];
 		while (moreReviewStatistics) {
 			reviewStatisticCollection.data.forEach((item) => {
@@ -444,7 +473,7 @@ async function getReviewStatistics(): Promise<WaniKaniReviewStatisticCache | nul
 			}
 		}
 		return {
-			etag,
+			updated_after: updateAfter,
 			data: reviewStatisticData,
 		};
 	}
@@ -454,20 +483,19 @@ async function getStudyMaterials(): Promise<WaniKaniStudyMaterialCache | null> {
 	const params: WKStudyMaterialParameters = {
 		hidden: false,
 	};
-	let response = await fetchFromWaniKani(
-		`${WANIKANI_BASE_URL}/study_materials`,
-		cache.subjects.etags.studyMaterials,
-		params,
-	);
-	if (response.status === HTTP_NOT_MODIFIED) {
+	if (cache.subjects.updated_after.studyMaterials !== "") {
+		params.updated_after = cache.subjects.updated_after.studyMaterials as WKDatableString;
+	}
+	let response = await fetchFromWaniKani(`${WANIKANI_BASE_URL}/study_materials`, "", params);
+	let studyMaterialCollection = (await response.json()) as WKStudyMaterialCollection;
+	if (studyMaterialCollection.data_updated_at === null || studyMaterialCollection.data.length === 0) {
 		console.info("No Study Material updates found, skipping...");
 		return null;
 	} else {
 		console.info("Updating Study Materials...");
-		const etag = response.headers.get("Etag") ?? "";
+		const updateAfter = studyMaterialCollection.data_updated_at;
 		const studyMaterialData: WKStudyMaterialData[] = [];
 		let moreStudyMaterials = true;
-		let studyMaterialCollection = (await response.json()) as WKStudyMaterialCollection;
 		while (moreStudyMaterials) {
 			studyMaterialCollection.data.forEach((item) => {
 				studyMaterialData.push(item.data);
@@ -480,7 +508,7 @@ async function getStudyMaterials(): Promise<WaniKaniStudyMaterialCache | null> {
 			}
 		}
 		return {
-			etag,
+			updated_after: updateAfter,
 			data: studyMaterialData,
 		};
 	}

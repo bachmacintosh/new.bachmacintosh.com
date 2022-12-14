@@ -75,7 +75,11 @@ interface BaseItemCache {
 	etag: string;
 }
 
-export interface WaniKaniAssignmentCache extends BaseItemCache {
+interface BaseSubjectItemCache {
+	updated_after: string;
+}
+
+export interface WaniKaniAssignmentCache extends BaseSubjectItemCache {
 	data: WKAssignmentData[];
 }
 
@@ -87,27 +91,26 @@ export interface WaniKaniResetCache extends BaseItemCache {
 	data: WKResetData[];
 }
 
-export interface WaniKaniReviewCache {
-	data_updated_at: string;
+export interface WaniKaniReviewCache extends BaseSubjectItemCache {
 	data: WKReviewData[];
 }
 
-export interface WaniKaniReviewStatisticCache extends BaseItemCache {
+export interface WaniKaniReviewStatisticCache extends BaseSubjectItemCache {
 	data: WKReviewStatisticData[];
 }
 
-export interface WaniKaniStudyMaterialCache extends BaseItemCache {
+export interface WaniKaniStudyMaterialCache extends BaseSubjectItemCache {
 	data: WKStudyMaterialData[];
 }
 
 export interface WaniKaniSubjectCache {
-	etags: {
+	updated_after: {
 		assignments: string;
+		reviews: string;
 		reviewStatistics: string;
 		studyMaterials: string;
 		subjects: string;
 	};
-	reviews_updated_after: string;
 	data: WaniKaniSubjectItemCache[];
 }
 
