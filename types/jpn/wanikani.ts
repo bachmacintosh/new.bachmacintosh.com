@@ -87,7 +87,8 @@ export interface WaniKaniResetCache extends BaseItemCache {
 	data: WKResetData[];
 }
 
-export interface WaniKaniReviewCache extends BaseItemCache {
+export interface WaniKaniReviewCache {
+	data_updated_at: string;
 	data: WKReviewData[];
 }
 
@@ -102,11 +103,11 @@ export interface WaniKaniStudyMaterialCache extends BaseItemCache {
 export interface WaniKaniSubjectCache {
 	etags: {
 		assignments: string;
-		reviews: string;
 		reviewStatistics: string;
 		studyMaterials: string;
 		subjects: string;
 	};
+	reviews_updated_after: string;
 	data: WaniKaniSubjectItemCache[];
 }
 
