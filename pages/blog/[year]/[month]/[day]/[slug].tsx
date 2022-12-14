@@ -13,6 +13,7 @@ import {
 } from "@/componentstext/typography";
 import type { GetStaticPaths, GetStaticProps } from "next";
 import { getBlogPost, getBlogPostPaths } from "@/lib/blog";
+import { BlogBreadcrumbs } from "@/componentslayout/Breadcrumbs";
 import type { BlogPostPageProps } from "@/types";
 import Hyperlink from "@/components/text/Hyperlink";
 import type { MDXComponents } from "mdx/types";
@@ -45,6 +46,8 @@ export default function BlogPost({ post }: BlogPostPageProps): JSX.Element {
 	};
 	return (
 		<>
+			<BlogBreadcrumbs />
+			<hr className="mb-3" />
 			<BlogPostTitle>{post.content.frontmatter?.title}</BlogPostTitle>
 			<br />
 			<span className="text-sm md:text-base text-base-content">
@@ -63,8 +66,14 @@ export default function BlogPost({ post }: BlogPostPageProps): JSX.Element {
 }
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
-	if (typeof params !== "undefined" && typeof params.slug === "string") {
-		const post = await getBlogPost(params.slug);
+	if (
+		typeof params !== "undefined" &&
+		typeof params.year === "string" &&
+		typeof params.month === "string" &&
+		typeof params.day === "string" &&
+		typeof params.slug === "string"
+	) {
+		const post = await getBlogPost(params.year, params.month, params.day, params.slug);
 		return {
 			props: {
 				post,

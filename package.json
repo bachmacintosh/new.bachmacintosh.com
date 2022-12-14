@@ -1,6 +1,6 @@
 {
 	"name": "www2",
-	"version": "0.6.4",
+	"version": "0.7.0",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -28,7 +28,6 @@
 		"@typescript-eslint/eslint-plugin": "5.46.0",
 		"@typescript-eslint/parser": "5.46.0",
 		"autoprefixer": "10.4.13",
-		"cloudinary": "1.32.0",
 		"daisyui": "2.43.0",
 		"dotenv": "16.0.3",
 		"eslint": "8.29.0",

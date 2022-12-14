@@ -30,7 +30,6 @@ import type {
 	WKResetCollection,
 	WKResetData,
 	WKResource,
-	WKReviewCollection,
 	WKReviewData,
 	WKReviewParameters,
 	WKReviewStatisticCollection,
@@ -60,10 +59,14 @@ if (typeof process.env.GITHUB_ACTIONS === "undefined" && typeof process.env.VERC
 }
 console.info("\n");
 
-const TOTAL_STEPS = 2;
+const TOTAL_STEPS = 3;
 const HTTP_NOT_MODIFIED = 304;
 const WANIKANI_BASE_URL = "https://api.wanikani.com/v2";
 const WANIKANI_CACHE_PATH = path.resolve(process.cwd(), ".wanikani");
+
+console.info("-------------------------");
+console.info(`1/${TOTAL_STEPS} - Check WaniKani Cache`);
+console.info("-------------------------");
 
 let cache: WaniKaniCache = {
 	levelProgressions: {
@@ -98,118 +101,7 @@ let cache: WaniKaniCache = {
 	},
 };
 
-console.info("-------------------------");
-console.info(`1/${TOTAL_STEPS} - Check WaniKani Cache`);
-console.info("-------------------------");
-try {
-	const cacheFile = await fs.promises.readFile(WANIKANI_CACHE_PATH, "utf-8");
-	cache = JSON.parse(cacheFile) as WaniKaniCache;
-	console.info("Found existing cache file. Checking for updates...");
-} catch (error) {
-	console.info("Cache file not found. Making a fresh one.");
-}
-
-console.info("Checking for Level Progression updates...");
-const newLevelProgressionCache = await getLevelProgressions();
-if (newLevelProgressionCache !== null) {
-	cache.levelProgressions = newLevelProgressionCache;
-}
-
-console.info("Checking for Reset updates...");
-const newResetsCache = await getResets();
-if (newResetsCache !== null) {
-	cache.resets = newResetsCache;
-}
-
-console.info("Checking for Subject updates...");
-const newSubjectCache = await getSubjects();
-if (newSubjectCache !== null) {
-	cache.subjects = newSubjectCache;
-}
-
-console.info("Checking for Assignment updates...");
-const newAssignmentCache = await getAssignments();
-if (newAssignmentCache !== null) {
-	cache.subjects.etags.assignments = newAssignmentCache.etag;
-	newAssignmentCache.data.forEach((item) => {
-		const subjectIndex = cache.subjects.data.findIndex((subject) => {
-			return subject.subjectId === item.subject_id;
-		});
-		if (subjectIndex !== -1) {
-			cache.subjects.data[subjectIndex].assignment = item;
-		}
-	});
-}
-
-console.info("Checking for Review updates...");
-const newReviewCache = await getReviews();
-if (newReviewCache !== null) {
-	cache.subjects.etags.reviews = newReviewCache.etag;
-	newReviewCache.data.forEach((item) => {
-		const subjectIndex = cache.subjects.data.findIndex((subject) => {
-			return subject.subjectId === item.subject_id;
-		});
-		if (subjectIndex !== -1) {
-			cache.subjects.data[subjectIndex].reviews.push(item);
-		}
-	});
-}
-
-console.info("Checking for Review Statistic updates...");
-const newReviewStatisticCache = await getReviewStatistics();
-if (newReviewStatisticCache !== null) {
-	cache.subjects.etags.reviewStatistics = newReviewStatisticCache.etag;
-	newReviewStatisticCache.data.forEach((item) => {
-		const subjectIndex = cache.subjects.data.findIndex((subject) => {
-			return subject.subjectId === item.subject_id;
-		});
-		if (subjectIndex !== -1) {
-			cache.subjects.data[subjectIndex].reviewStatistic = item;
-		}
-	});
-}
-
-console.info("Checking for Study Material updates...");
-const newStudyMaterialCache = await getStudyMaterials();
-if (newStudyMaterialCache !== null) {
-	cache.subjects.etags.studyMaterials = newStudyMaterialCache.etag;
-	newStudyMaterialCache.data.forEach((item) => {
-		const subjectIndex = cache.subjects.data.findIndex((subject) => {
-			return subject.subjectId === item.subject_id;
-		});
-		if (subjectIndex !== -1) {
-			cache.subjects.data[subjectIndex].studyMaterials.push(item);
-		}
-	});
-}
-
-console.info("Checking for Summary updates...");
-const newSummaryCache = await getSummary();
-if (newSummaryCache !== null) {
-	cache.summary = newSummaryCache;
-}
-
-console.info("Checking for User updates...");
-const newUserCache = await getUser();
-if (newUserCache !== null) {
-	cache.user = newUserCache;
-}
-
-console.info("Checking for Voice Actor updates...");
-const newVoiceActorCache = await getVoiceActors();
-if (newVoiceActorCache !== null) {
-	cache.voiceActors = newVoiceActorCache;
-}
-
-console.info("Sorting Subject Reviews...");
-
-cache.subjects.data.forEach((item) => {
-	item.reviews.sort((reviewA, reviewB) => {
-		return new Date(reviewA.created_at).getTime() - new Date(reviewB.created_at).getTime();
-	});
-});
-
-await fs.promises.writeFile(WANIKANI_CACHE_PATH, JSON.stringify(cache), "utf-8");
+await cacheWaniKani();
 
 console.info("\n");
 console.info("---------------------------------------");
@@ -217,6 +109,118 @@ console.info(`2/${TOTAL_STEPS} - Validate Blog Posts' Front Matter`);
 console.info("---------------------------------------");
 
 await verifyFrontMatter();
+
+async function cacheWaniKani(): Promise<void> {
+	try {
+		const cacheFile = await fs.promises.readFile(WANIKANI_CACHE_PATH, "utf-8");
+		cache = JSON.parse(cacheFile) as WaniKaniCache;
+		console.info("Found existing cache file. Checking for updates...");
+	} catch (error) {
+		console.info("Cache file not found. Making a fresh one.");
+	}
+
+	console.info("Checking for Level Progression updates...");
+	const newLevelProgressionCache = await getLevelProgressions();
+	if (newLevelProgressionCache !== null) {
+		cache.levelProgressions = newLevelProgressionCache;
+	}
+
+	console.info("Checking for Reset updates...");
+	const newResetsCache = await getResets();
+	if (newResetsCache !== null) {
+		cache.resets = newResetsCache;
+	}
+
+	console.info("Checking for Subject updates...");
+	const newSubjectCache = await getSubjects();
+	if (newSubjectCache !== null) {
+		cache.subjects = newSubjectCache;
+	}
+
+	console.info("Checking for Assignment updates...");
+	const newAssignmentCache = await getAssignments();
+	if (newAssignmentCache !== null) {
+		cache.subjects.etags.assignments = newAssignmentCache.etag;
+		newAssignmentCache.data.forEach((item) => {
+			const subjectIndex = cache.subjects.data.findIndex((subject) => {
+				return subject.subjectId === item.subject_id;
+			});
+			if (subjectIndex !== -1) {
+				cache.subjects.data[subjectIndex].assignment = item;
+			}
+		});
+	}
+
+	console.info("Checking for Review updates...");
+	const newReviewCache = await getReviews();
+	if (newReviewCache !== null) {
+		cache.subjects.etags.reviews = newReviewCache.etag;
+		newReviewCache.data.forEach((item) => {
+			const subjectIndex = cache.subjects.data.findIndex((subject) => {
+				return subject.subjectId === item.subject_id;
+			});
+			if (subjectIndex !== -1) {
+				cache.subjects.data[subjectIndex].reviews.push(item);
+			}
+		});
+	}
+
+	console.info("Checking for Review Statistic updates...");
+	const newReviewStatisticCache = await getReviewStatistics();
+	if (newReviewStatisticCache !== null) {
+		cache.subjects.etags.reviewStatistics = newReviewStatisticCache.etag;
+		newReviewStatisticCache.data.forEach((item) => {
+			const subjectIndex = cache.subjects.data.findIndex((subject) => {
+				return subject.subjectId === item.subject_id;
+			});
+			if (subjectIndex !== -1) {
+				cache.subjects.data[subjectIndex].reviewStatistic = item;
+			}
+		});
+	}
+
+	console.info("Checking for Study Material updates...");
+	const newStudyMaterialCache = await getStudyMaterials();
+	if (newStudyMaterialCache !== null) {
+		cache.subjects.etags.studyMaterials = newStudyMaterialCache.etag;
+		newStudyMaterialCache.data.forEach((item) => {
+			const subjectIndex = cache.subjects.data.findIndex((subject) => {
+				return subject.subjectId === item.subject_id;
+			});
+			if (subjectIndex !== -1) {
+				cache.subjects.data[subjectIndex].studyMaterials.push(item);
+			}
+		});
+	}
+
+	console.info("Checking for Summary updates...");
+	const newSummaryCache = await getSummary();
+	if (newSummaryCache !== null) {
+		cache.summary = newSummaryCache;
+	}
+
+	console.info("Checking for User updates...");
+	const newUserCache = await getUser();
+	if (newUserCache !== null) {
+		cache.user = newUserCache;
+	}
+
+	console.info("Checking for Voice Actor updates...");
+	const newVoiceActorCache = await getVoiceActors();
+	if (newVoiceActorCache !== null) {
+		cache.voiceActors = newVoiceActorCache;
+	}
+
+	console.info("Sorting Subject Reviews...");
+
+	cache.subjects.data.forEach((item) => {
+		item.reviews.sort((reviewA, reviewB) => {
+			return new Date(reviewA.created_at).getTime() - new Date(reviewB.created_at).getTime();
+		});
+	});
+
+	await fs.promises.writeFile(WANIKANI_CACHE_PATH, JSON.stringify(cache), "utf-8");
+}
 
 async function getLevelProgressions(): Promise<WaniKaniLevelProgressionCache | null> {
 	let response = await fetchFromWaniKani(`${WANIKANI_BASE_URL}/level_progressions`, cache.levelProgressions.etag);
@@ -369,15 +373,17 @@ async function getReviews(): Promise<WaniKaniReviewCache | null> {
 	const reviewParams: WKReviewParameters = {
 		updated_after: resetDate,
 	};
-	let response = await fetchFromWaniKani(`${WANIKANI_BASE_URL}/reviews`, cache.subjects.etags.reviews, reviewParams);
+	const response = await fetchFromWaniKani(`${WANIKANI_BASE_URL}/reviews`, cache.subjects.etags.reviews, reviewParams);
 	if (response.status === HTTP_NOT_MODIFIED) {
 		console.info("No Review updates found, skipping...");
 		return null;
 	} else {
 		console.info("Updating Reviews...");
 		const etag = response.headers.get("Etag") ?? "";
-		let moreReviews = true;
 		const reviewData: WKReviewData[] = [];
+
+		/* There's an issue with the WaniKani API fetching reviews, disabling for now...
+		let moreReviews = true;
 		let reviewCollection = (await response.json()) as WKReviewCollection;
 		while (moreReviews) {
 			reviewCollection.data.forEach((item) => {
@@ -390,6 +396,8 @@ async function getReviews(): Promise<WaniKaniReviewCache | null> {
 				reviewCollection = (await response.json()) as WKReviewCollection;
 			}
 		}
+		*/
+
 		return {
 			etag,
 			data: reviewData,
@@ -577,28 +585,67 @@ async function fetchFromWaniKani<
 }
 
 export async function verifyFrontMatter(): Promise<void> {
+	const posts: BlogPost[] = [];
 	const POSTS_PATH = path.join(process.cwd(), "blog");
-	const initialPaths = await fs.promises.readdir(POSTS_PATH);
-	const postFilePaths = initialPaths.filter((file) => {
-		return /\.mdx?$/u.test(file);
-	});
-	const posts = await Promise.all(
-		postFilePaths.map(async (filePath) => {
-			const source = await fs.promises.readFile(path.join(POSTS_PATH, filePath));
-			const content = await serialize(source, {
-				mdxOptions: {
-					remarkPlugins: [remarkGfm],
-					rehypePlugins: [],
-				},
-				parseFrontmatter: true,
-			});
-			const slug = filePath.replace(/\.mdx?$/u, "");
-
-			const post: BlogPost = {
-				content,
-				slug,
-			};
-			return post;
+	const initialPaths = await fs.promises.readdir(POSTS_PATH, { withFileTypes: true });
+	const yearFolders = initialPaths
+		.filter((dirent) => {
+			return dirent.isDirectory();
+		})
+		.map((dirent) => {
+			return dirent.name;
+		});
+	await Promise.all(
+		yearFolders.map(async (year) => {
+			const yearPath = path.join(POSTS_PATH, year);
+			const initialMonthPaths = await fs.promises.readdir(yearPath, { withFileTypes: true });
+			const monthFolders = initialMonthPaths
+				.filter((dirent) => {
+					return dirent.isDirectory();
+				})
+				.map((dirent) => {
+					return dirent.name;
+				});
+			await Promise.all(
+				monthFolders.map(async (month) => {
+					const monthPath = path.join(POSTS_PATH, year, month);
+					const initialDayPaths = await fs.promises.readdir(monthPath, { withFileTypes: true });
+					const dayFolders = initialDayPaths
+						.filter((dirent) => {
+							return dirent.isDirectory();
+						})
+						.map((dirent) => {
+							return dirent.name;
+						});
+					await Promise.all(
+						dayFolders.map(async (day) => {
+							const initialPostPath = path.join(POSTS_PATH, year, month, day);
+							const initialPostFiles = await fs.promises.readdir(initialPostPath);
+							const postFiles = initialPostFiles.filter((file) => {
+								return /\.mdx?$/u.test(file);
+							});
+							await Promise.all(
+								postFiles.map(async (file) => {
+									const slug = file.replace(/\.mdx?$/u, "");
+									console.info(`Validating Post: /blog/${year}/${month}/${day}/${file}`);
+									const source = await fs.promises.readFile(path.join(POSTS_PATH, year, month, day, file));
+									const content = await serialize(source, {
+										mdxOptions: {
+											remarkPlugins: [remarkGfm],
+											rehypePlugins: [],
+										},
+										parseFrontmatter: true,
+									});
+									posts.push({
+										content,
+										slug,
+									});
+								}),
+							);
+						}),
+					);
+				}),
+			);
 		}),
 	);
 	posts.forEach((post) => {
@@ -626,8 +673,8 @@ export async function verifyFrontMatter(): Promise<void> {
 			if (post.content.frontmatter.coverImage) {
 				try {
 					const url = new URL(post.content.frontmatter.coverImage);
-					if (url.protocol !== "http:" && url.protocol !== "https:") {
-						throw new Error("URL must be either HTTP or HTTPS.");
+					if (url.protocol !== "https:") {
+						throw new Error("URL must be HTTPS.");
 					}
 				} catch (error) {
 					if (error instanceof Error) {
