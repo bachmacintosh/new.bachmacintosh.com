@@ -61,21 +61,23 @@ export async function getAllBlogPosts(): Promise<BlogPost[]> {
 							const postFiles = initialPostFiles.filter((file) => {
 								return /\.mdx?$/u.test(file);
 							});
-							await Promise.all(postFiles.map(async (file) => {
-								const slug = file.replace(/\.mdx?$/u, "");
-								const source = await fs.promises.readFile(path.join(POSTS_PATH, year, month, day, file));
-								const content = await serialize(source, {
-									mdxOptions: {
-										remarkPlugins: [remarkGfm],
-										rehypePlugins: [],
-									},
-									parseFrontmatter: true,
-								});
-								posts.push({
-									content,
-									slug
-								});
-							}));
+							await Promise.all(
+								postFiles.map(async (file) => {
+									const slug = file.replace(/\.mdx?$/u, "");
+									const source = await fs.promises.readFile(path.join(POSTS_PATH, year, month, day, file));
+									const content = await serialize(source, {
+										mdxOptions: {
+											remarkPlugins: [remarkGfm],
+											rehypePlugins: [],
+										},
+										parseFrontmatter: true,
+									});
+									posts.push({
+										content,
+										slug,
+									});
+								}),
+							);
 						}),
 					);
 				}),
