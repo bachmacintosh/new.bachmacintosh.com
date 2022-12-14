@@ -23,6 +23,7 @@ import type {
 	WKAssignmentParameters,
 	WKCollection,
 	WKCollectionParameters,
+	WKDatableString,
 	WKError,
 	WKLevelProgressionCollection,
 	WKLevelProgressionData,
@@ -30,6 +31,7 @@ import type {
 	WKResetCollection,
 	WKResetData,
 	WKResource,
+	WKReviewCollection,
 	WKReviewData,
 	WKReviewParameters,
 	WKReviewStatisticCollection,
@@ -80,11 +82,11 @@ let cache: WaniKaniCache = {
 	subjects: {
 		etags: {
 			assignments: "",
-			reviews: "",
 			reviewStatistics: "",
 			studyMaterials: "",
 			subjects: "",
 		},
+		reviews_updated_after: "",
 		data: [],
 	},
 	summary: {
@@ -154,7 +156,9 @@ async function cacheWaniKani(): Promise<void> {
 	console.info("Checking for Review updates...");
 	const newReviewCache = await getReviews();
 	if (newReviewCache !== null) {
-		cache.subjects.etags.reviews = newReviewCache.etag;
+		if (newReviewCache.data_updated_at !== "") {
+			cache.subjects.reviews_updated_after = newReviewCache.data_updated_at;
+		}
 		newReviewCache.data.forEach((item) => {
 			const subjectIndex = cache.subjects.data.findIndex((subject) => {
 				return subject.subjectId === item.subject_id;
@@ -211,13 +215,32 @@ async function cacheWaniKani(): Promise<void> {
 		cache.voiceActors = newVoiceActorCache;
 	}
 
-	console.info("Sorting Subject Reviews...");
+	console.info("Filtering and Sorting Subject Reviews...");
+	let reviewCount = 0;
+	const levelOneResets = cache.resets.data.filter((reset) => {
+		return reset.target_level === 1;
+	});
+	levelOneResets.sort((resetA, resetB) => {
+		return new Date(resetA.created_at).getTime() - new Date(resetB.created_at).getTime();
+	});
+	const lastReset = levelOneResets.pop();
+	if (typeof lastReset === "undefined") {
+		throw new Error("Unexpected empty Level 1 Reset array");
+	}
+	const resetDate = new Date(lastReset.created_at).getTime();
 
 	cache.subjects.data.forEach((item) => {
+		const filteredReviews = item.reviews.filter((review) => {
+			return new Date(review.created_at).getTime() >= resetDate;
+		});
+		item.reviews = filteredReviews;
+		reviewCount += filteredReviews.length;
+
 		item.reviews.sort((reviewA, reviewB) => {
 			return new Date(reviewA.created_at).getTime() - new Date(reviewB.created_at).getTime();
 		});
 	});
+	console.info(`Total Reviews: ${reviewCount}`);
 
 	await fs.promises.writeFile(WANIKANI_CACHE_PATH, JSON.stringify(cache), "utf-8");
 }
@@ -295,10 +318,10 @@ async function getSubjects(): Promise<WaniKaniSubjectCache | null> {
 			etags: {
 				subjects: response.headers.get("Etag") ?? "",
 				assignments: "",
-				reviews: "",
 				reviewStatistics: "",
 				studyMaterials: "",
 			},
+			reviews_updated_after: "",
 			data: [],
 		};
 		let subjectCollection = (await response.json()) as WKSubjectCollection;
@@ -359,32 +382,20 @@ async function getAssignments(): Promise<WaniKaniAssignmentCache | null> {
 }
 
 async function getReviews(): Promise<WaniKaniReviewCache | null> {
-	const levelOneResets = cache.resets.data.filter((reset) => {
-		return reset.target_level === 1;
-	});
-	levelOneResets.sort((resetA, resetB) => {
-		return new Date(resetA.created_at).getTime() - new Date(resetB.created_at).getTime();
-	});
-	const lastReset = levelOneResets.pop();
-	if (typeof lastReset === "undefined") {
-		throw new Error("Unexpected empty Level 1 Reset array");
+	const reviewParams: WKReviewParameters = {};
+	if (cache.subjects.reviews_updated_after !== "") {
+		reviewParams.updated_after = cache.subjects.reviews_updated_after as WKDatableString;
 	}
-	const resetDate = lastReset.created_at;
-	const reviewParams: WKReviewParameters = {
-		updated_after: resetDate,
-	};
-	const response = await fetchFromWaniKani(`${WANIKANI_BASE_URL}/reviews`, cache.subjects.etags.reviews, reviewParams);
-	if (response.status === HTTP_NOT_MODIFIED) {
+	let response = await fetchFromWaniKani(`${WANIKANI_BASE_URL}/reviews`, "", reviewParams);
+	let reviewCollection = (await response.json()) as WKReviewCollection;
+	if (reviewCollection.data_updated_at === null || reviewCollection.data.length === 0) {
 		console.info("No Review updates found, skipping...");
 		return null;
 	} else {
 		console.info("Updating Reviews...");
-		const etag = response.headers.get("Etag") ?? "";
 		const reviewData: WKReviewData[] = [];
-
-		/* There's an issue with the WaniKani API fetching reviews, disabling for now...
 		let moreReviews = true;
-		let reviewCollection = (await response.json()) as WKReviewCollection;
+		const updateAfter = reviewCollection.data_updated_at;
 		while (moreReviews) {
 			reviewCollection.data.forEach((item) => {
 				reviewData.push(item.data);
@@ -396,11 +407,9 @@ async function getReviews(): Promise<WaniKaniReviewCache | null> {
 				reviewCollection = (await response.json()) as WKReviewCollection;
 			}
 		}
-		*/
-
 		return {
-			etag,
 			data: reviewData,
+			data_updated_at: updateAfter,
 		};
 	}
 }
