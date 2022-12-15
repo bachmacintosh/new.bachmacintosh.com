@@ -1,6 +1,6 @@
 {
 	"name": "www2",
-	"version": "0.7.2",
+	"version": "0.7.3",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -15,7 +15,7 @@
 		"lint:fix": "next lint --fix && prettier . --write"
 	},
 	"dependencies": {
-		"@bachmacintosh/wanikani-api-types": "1.0.0-rc5",
+		"@bachmacintosh/wanikani-api-types": "1.0.0",
 		"@fortawesome/fontawesome-svg-core": "6.2.1",
 		"@fortawesome/free-brands-svg-icons": "6.2.1",
 		"@fortawesome/free-regular-svg-icons": "6.2.1",
@@ -36,7 +36,7 @@
 		"gray-matter": "^4.0.3",
 		"next": "13.0.6",
 		"next-mdx-remote": "4.2.0",
-		"postcss": "8.4.19",
+		"postcss": "8.4.20",
 		"prettier": "2.8.1",
 		"react": "18.2.0",
 		"react-dom": "18.2.0",
