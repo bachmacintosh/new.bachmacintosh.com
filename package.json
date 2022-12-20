@@ -1,6 +1,6 @@
 {
 	"name": "www2",
-	"version": "0.7.7",
+	"version": "0.7.8",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -21,6 +21,8 @@
 		"@fortawesome/free-regular-svg-icons": "6.2.1",
 		"@fortawesome/free-solid-svg-icons": "6.2.1",
 		"@fortawesome/react-fontawesome": "0.2.0",
+		"@googleapis/sheets": "4.0.0",
+		"@googleapis/youtube": "8.0.0",
 		"@heroicons/react": "2.0.13",
 		"@types/node": "18.11.16",
 		"@types/react": "18.0.26",
@@ -33,6 +35,7 @@
 		"eslint": "8.30.0",
 		"eslint-config-next": "13.0.7",
 		"eslint-config-prettier": "8.5.0",
+		"google-auth-library": "8.7.0",
 		"gray-matter": "^4.0.3",
 		"next": "13.0.7",
 		"next-mdx-remote": "4.2.0",
