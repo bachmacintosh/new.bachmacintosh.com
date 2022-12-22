@@ -1,6 +1,6 @@
 {
 	"name": "www2",
-	"version": "0.7.9",
+	"version": "0.7.10",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -37,6 +37,7 @@
 		"eslint-config-prettier": "8.5.0",
 		"google-auth-library": "8.7.0",
 		"gray-matter": "^4.0.3",
+		"libsodium-wrappers": "0.7.10",
 		"next": "13.0.7",
 		"next-mdx-remote": "4.2.0",
 		"postcss": "8.4.20",
