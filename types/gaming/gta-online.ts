@@ -1,5 +1,14 @@
 export interface GTAOnlinePageProps {
-	summary: (GTASummaryCount | GTASummaryDate | GTASummaryMoney)[];
+	summary: {
+		money: GTASummaryMoney[];
+		grindDays: number;
+		grindWeeks: number;
+		grindDaysRemaining: number;
+		grindWeeksRemaining: number;
+		averageGrindDays: number;
+		wishListCompletionDate: Date;
+		daysPlayed: number;
+	};
 	wishList: GTAWishListEntry[];
 	crateWarehouses: GTACrateWarehouse[];
 	properties: GTAProperty[];
@@ -53,19 +62,6 @@ export interface GTASummaryMoney {
 	type: "Money";
 	gtaDollars: number;
 	sharkCardAmount: number;
-}
-
-export interface GTASummaryCount {
-	name: string;
-	type: "Count";
-	count: number;
-	total: number;
-}
-
-export interface GTASummaryDate {
-	name: string;
-	type: "Date";
-	date: Date;
 }
 
 export interface GTAVehicle {
