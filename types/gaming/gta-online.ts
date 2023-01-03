@@ -1,21 +1,9 @@
 export interface GTAOnlinePageProps {
-	summary: {
-		money: GTASummaryMoney[];
-		grindDays: number;
-		grindWeeks: number;
-		grindDaysRemaining: number;
-		grindWeeksRemaining: number;
-		averageGrindDays: number;
-		wishListCompletionDate: Date;
-		daysPlayed: number;
-	};
+	summary: GTASummary;
 	wishList: GTAWishListEntry[];
 	crateWarehouses: GTACrateWarehouse[];
 	properties: GTAProperty[];
-	earnings: {
-		summary: GTAEarningsSummary;
-		detail: GTAEarningsRow[];
-	};
+	earnings: GTAEarnings;
 }
 
 export interface GTACrateWarehouse {
@@ -33,6 +21,11 @@ export interface GTACrateWarehouse {
 	specialItemValue: number;
 	raidLimit: number;
 	fullLimit: number;
+}
+
+export interface GTAEarnings {
+	summary: GTAEarningsSummary;
+	detail: GTAEarningsRow[];
 }
 
 export interface GTAEarningsSummary {
@@ -57,6 +50,16 @@ export interface GTAProperty extends GTAVehicle {
 	garage: GTAGarageFloor[];
 }
 
+export interface GTASummary {
+	money: GTASummaryMoney[];
+	grindDays: number;
+	grindWeeks: number;
+	grindDaysRemaining: number;
+	grindWeeksRemaining: number;
+	averageGrindDays: number;
+	wishListCompletionDate: Date;
+	daysPlayed: number;
+}
 export interface GTASummaryMoney {
 	name: string;
 	type: "Money";
