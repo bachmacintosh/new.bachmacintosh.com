@@ -1,6 +1,6 @@
 {
 	"name": "www2",
-	"version": "0.7.15",
+	"version": "0.7.16",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -32,7 +32,7 @@
 		"autoprefixer": "10.4.13",
 		"daisyui": "2.46.0",
 		"dotenv": "16.0.3",
-		"eslint": "8.30.0",
+		"eslint": "8.31.0",
 		"eslint-config-next": "13.1.1",
 		"eslint-config-prettier": "8.5.0",
 		"google-auth-library": "8.7.0",
