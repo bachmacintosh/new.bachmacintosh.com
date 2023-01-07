@@ -165,6 +165,7 @@ async function cacheWaniKani(): Promise<void> {
 		});
 	}
 
+	/* TODO: Enable when WaniKani fixes review endpoint
 	console.info("Checking for Review updates...");
 	const newReviewCache = await getReviews();
 	if (newReviewCache !== null) {
@@ -180,6 +181,7 @@ async function cacheWaniKani(): Promise<void> {
 			}
 		});
 	}
+	*/
 
 	console.info("Checking for Review Statistic updates...");
 	const newReviewStatisticCache = await getReviewStatistics();
@@ -411,6 +413,7 @@ async function getAssignments(): Promise<WaniKaniAssignmentCache | null> {
 	}
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Saving for later use when WaniKani fixes endpoint
 async function getReviews(): Promise<WaniKaniReviewCache | null> {
 	const reviewParams: WKReviewParameters = {};
 	if (cache.subjects.updated_after.reviews !== "") {
@@ -424,8 +427,8 @@ async function getReviews(): Promise<WaniKaniReviewCache | null> {
 	} else {
 		console.info("Updating Reviews...");
 		const reviewData: WKReviewData[] = [];
-		let moreReviews = true;
 		const updateAfter = reviewCollection.data_updated_at;
+		let moreReviews = true;
 		while (moreReviews) {
 			reviewCollection.data.forEach((item) => {
 				reviewData.push(item.data);
