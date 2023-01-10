@@ -83,9 +83,9 @@ export function OrderedList(props: JSX.IntrinsicElements["ol"]): JSX.Element {
 	);
 }
 
-export function Paragraph(props: JSX.IntrinsicElements["p"] & { indent: number }): JSX.Element {
+export function Paragraph(props: JSX.IntrinsicElements["p"] & { indent?: number }): JSX.Element {
 	let textClass = normalTextClasses;
-	if (props.indent) {
+	if (typeof props.indent !== "undefined" && props.indent) {
 		textClass += " indent-6";
 	}
 	return (
